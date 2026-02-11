@@ -606,6 +606,11 @@ export const MapView = () => {
         >
           {showWeatherOverlay ? '🌧️ WEATHER ON' : '🌧️ WEATHER OFF'}
         </button>
+        {fires && fires.length > 0 && (
+          <div className="px-3 py-1.5 font-mono text-[9px] tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">
+            🔥 {fires.length} FIRES
+          </div>
+        )}
       </div>
 
       {/* Weather overlay info */}
