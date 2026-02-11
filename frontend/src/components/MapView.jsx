@@ -97,11 +97,30 @@ const ConflictZoneMarker = ({ zone, isSelected, onClick }) => {
   const color = getConflictColor(zone.real_time_level || zone.risk_level);
   const riskScore = zone.real_time_risk || zone.risk_score;
   
+  // Validate zone coordinates before rendering
+  if (!zone || typeof zone.lat !== 'number' || typeof zone.lng !== 'number' ||
+      isNaN(zone.lat) || isNaN(zone.lng)) {
+    return null;
+  }
+
+  const handleClick = (e) => {
+    // Prevent the event from bubbling and pass the zone object
+    if (e && e.originalEvent) {
+      e.originalEvent.stopPropagation();
+    }
+    // Pass a clean copy of the zone with validated coordinates
+    onClick({
+      ...zone,
+      lat: Number(zone.lat),
+      lng: Number(zone.lng)
+    });
+  };
+  
   return (
     <>
       {/* Outer warning circle */}
       <Circle
-        center={[zone.lat, zone.lng]}
+        center={[Number(zone.lat), Number(zone.lng)]}
         radius={zone.radius}
         pathOptions={{
           color: color,
@@ -110,7 +129,7 @@ const ConflictZoneMarker = ({ zone, isSelected, onClick }) => {
           weight: isSelected ? 3 : 2,
           dashArray: zone.real_time_level === 'Critical' ? '' : '5, 10',
         }}
-        eventHandlers={{ click: onClick }}
+        eventHandlers={{ click: handleClick }}
       >
         <Popup>
           <div className="font-display text-base font-bold mb-2" style={{ color }}>
@@ -153,7 +172,7 @@ const ConflictZoneMarker = ({ zone, isSelected, onClick }) => {
       {/* Center marker for critical zones */}
       {(zone.real_time_level === 'Critical' || zone.real_time_level === 'High') && (
         <CircleMarker
-          center={[zone.lat, zone.lng]}
+          center={[Number(zone.lat), Number(zone.lng)]}
           radius={8}
           pathOptions={{
             color: color,
@@ -161,7 +180,7 @@ const ConflictZoneMarker = ({ zone, isSelected, onClick }) => {
             fillOpacity: 1,
             weight: 2,
           }}
-          eventHandlers={{ click: onClick }}
+          eventHandlers={{ click: handleClick }}
         />
       )}
     </>
