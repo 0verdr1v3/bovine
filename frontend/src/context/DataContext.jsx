@@ -21,8 +21,12 @@ export const DataProvider = ({ children }) => {
   const [grazingRegions, setGrazingRegions] = useState([]);
   const [corridors, setCorridors] = useState([]);
   const [ndviZones, setNdviZones] = useState([]);
+  const [conflictZones, setConflictZones] = useState([]);
+  const [historicalConflicts, setHistoricalConflicts] = useState([]);
+  const [news, setNews] = useState([]);
   const [stats, setStats] = useState(null);
   const [selectedHerd, setSelectedHerd] = useState(null);
+  const [selectedConflictZone, setSelectedConflictZone] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -33,6 +37,7 @@ export const DataProvider = ({ children }) => {
     water: true,
     ndvi: true,
     corridors: true,
+    conflicts: true,
   });
 
   // Simple mode toggle
@@ -46,19 +51,51 @@ export const DataProvider = ({ children }) => {
     setIsSimpleMode(prev => !prev);
   }, []);
 
+  // Safe select herd function with validation
+  const selectHerd = useCallback((herd) => {
+    if (herd && typeof herd.lat === 'number' && typeof herd.lng === 'number' &&
+        !isNaN(herd.lat) && !isNaN(herd.lng)) {
+      setSelectedHerd(herd);
+      setSelectedConflictZone(null);
+    }
+  }, []);
+
+  // Safe select conflict zone function
+  const selectConflictZone = useCallback((zone) => {
+    if (zone && typeof zone.lat === 'number' && typeof zone.lng === 'number' &&
+        !isNaN(zone.lat) && !isNaN(zone.lng)) {
+      setSelectedConflictZone(zone);
+      setSelectedHerd(null);
+    }
+  }, []);
+
   // Fetch all data
   const fetchAllData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const [herdsRes, weatherRes, waterRes, grazingRes, corridorsRes, ndviRes, statsRes] = await Promise.all([
+      const [
+        herdsRes, 
+        weatherRes, 
+        waterRes, 
+        grazingRes, 
+        corridorsRes, 
+        ndviRes, 
+        conflictRes,
+        historicalRes,
+        newsRes,
+        statsRes
+      ] = await Promise.all([
         axios.get(`${API}/herds`).catch(e => ({ data: { herds: [] } })),
         axios.get(`${API}/weather`).catch(e => ({ data: null })),
         axios.get(`${API}/water-sources`).catch(e => ({ data: { sources: [] } })),
         axios.get(`${API}/grazing-regions`).catch(e => ({ data: { regions: [] } })),
         axios.get(`${API}/corridors`).catch(e => ({ data: { corridors: [] } })),
         axios.get(`${API}/ndvi-zones`).catch(e => ({ data: { zones: [] } })),
+        axios.get(`${API}/conflict-zones`).catch(e => ({ data: { zones: [] } })),
+        axios.get(`${API}/historical-conflicts`).catch(e => ({ data: { conflicts: [] } })),
+        axios.get(`${API}/news`).catch(e => ({ data: { articles: [] } })),
         axios.get(`${API}/stats`).catch(e => ({ data: null })),
       ]);
 
@@ -68,6 +105,9 @@ export const DataProvider = ({ children }) => {
       setGrazingRegions(grazingRes.data?.regions || []);
       setCorridors(corridorsRes.data?.corridors || []);
       setNdviZones(ndviRes.data?.zones || []);
+      setConflictZones(conflictRes.data?.zones || []);
+      setHistoricalConflicts(historicalRes.data?.conflicts || []);
+      setNews(newsRes.data?.articles || []);
       setStats(statsRes.data);
       setLastUpdated(new Date().toISOString());
     } catch (err) {
@@ -86,6 +126,7 @@ export const DataProvider = ({ children }) => {
         context: {
           ...context,
           selectedHerd: selectedHerd,
+          selectedConflictZone: selectedConflictZone,
           weather: weather?.daily,
         }
       });
@@ -94,7 +135,7 @@ export const DataProvider = ({ children }) => {
       console.error('AI analysis error:', err);
       throw new Error(err.response?.data?.detail || 'AI analysis failed');
     }
-  }, [selectedHerd, weather]);
+  }, [selectedHerd, selectedConflictZone, weather]);
 
   // Initial data load
   useEffect(() => {
@@ -121,9 +162,14 @@ export const DataProvider = ({ children }) => {
     grazingRegions,
     corridors,
     ndviZones,
+    conflictZones,
+    historicalConflicts,
+    news,
     stats,
     selectedHerd,
-    setSelectedHerd,
+    setSelectedHerd: selectHerd,
+    selectedConflictZone,
+    setSelectedConflictZone: selectConflictZone,
     layers,
     toggleLayer,
     isSimpleMode,
