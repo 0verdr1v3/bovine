@@ -19,6 +19,19 @@ export const Header = () => {
   const criticalCount = conflictZones?.filter(z => z.real_time_level === 'Critical').length || 0;
   const highCount = conflictZones?.filter(z => z.real_time_level === 'High').length || 0;
 
+  // Format data age
+  const getDataAge = () => {
+    if (!lastUpdated) return 'Loading...';
+    const date = new Date(lastUpdated);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffSecs = Math.floor(diffMs / 1000);
+    if (diffSecs < 60) return `${diffSecs}s ago`;
+    const diffMins = Math.floor(diffSecs / 60);
+    if (diffMins < 60) return `${diffMins}m ago`;
+    return `${Math.floor(diffMins / 60)}h ago`;
+  };
+
   const statItems = [
     { 
       label: 'HERDS', 
@@ -34,7 +47,7 @@ export const Header = () => {
     },
     { 
       label: '7-DAY RAIN', 
-      value: stats?.rain_7day_mm ? `${stats.rain_7day_mm}mm` : '—',
+      value: stats?.rain_7day_mm !== undefined ? `${stats.rain_7day_mm}mm` : '—',
       icon: Droplets,
       color: 'text-accent'
     },
@@ -48,13 +61,13 @@ export const Header = () => {
       label: 'CRITICAL', 
       value: criticalCount,
       icon: AlertTriangle,
-      color: 'text-destructive'
+      color: criticalCount > 0 ? 'text-destructive' : 'text-muted-foreground'
     },
     { 
       label: 'HIGH RISK', 
       value: highCount,
       icon: Shield,
-      color: 'text-warning'
+      color: highCount > 0 ? 'text-warning' : 'text-muted-foreground'
     },
   ];
 
