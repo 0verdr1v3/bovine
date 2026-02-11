@@ -53,10 +53,17 @@ export const DataProvider = ({ children }) => {
 
   // Safe select herd function with validation
   const selectHerd = useCallback((herd) => {
-    if (herd && typeof herd.lat === 'number' && typeof herd.lng === 'number' &&
-        !isNaN(herd.lat) && !isNaN(herd.lng)) {
+    if (herd && 
+        herd.lat !== undefined && herd.lat !== null &&
+        herd.lng !== undefined && herd.lng !== null &&
+        typeof herd.lat === 'number' && typeof herd.lng === 'number' &&
+        !isNaN(herd.lat) && !isNaN(herd.lng) &&
+        herd.lat >= -90 && herd.lat <= 90 &&
+        herd.lng >= -180 && herd.lng <= 180) {
       setSelectedHerd(herd);
       setSelectedConflictZone(null);
+    } else {
+      console.warn('Invalid herd coordinates:', herd);
     }
   }, []);
 
