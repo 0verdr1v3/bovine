@@ -17,6 +17,7 @@ export const useData = () => {
 export const DataProvider = ({ children }) => {
   const [herds, setHerds] = useState([]);
   const [weather, setWeather] = useState(null);
+  const [weatherMulti, setWeatherMulti] = useState([]);
   const [waterSources, setWaterSources] = useState([]);
   const [grazingRegions, setGrazingRegions] = useState([]);
   const [corridors, setCorridors] = useState([]);
@@ -25,11 +26,16 @@ export const DataProvider = ({ children }) => {
   const [historicalConflicts, setHistoricalConflicts] = useState([]);
   const [news, setNews] = useState([]);
   const [stats, setStats] = useState(null);
+  const [fires, setFires] = useState([]);
+  const [foodSecurity, setFoodSecurity] = useState(null);
+  const [displacement, setDisplacement] = useState(null);
+  const [dataSources, setDataSources] = useState([]);
   const [selectedHerd, setSelectedHerd] = useState(null);
   const [selectedConflictZone, setSelectedConflictZone] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [dataMethodology, setDataMethodology] = useState('');
 
   // Layer visibility state
   const [layers, setLayers] = useState({
@@ -38,6 +44,7 @@ export const DataProvider = ({ children }) => {
     ndvi: true,
     corridors: true,
     conflicts: true,
+    fires: true,
   });
 
   // Simple mode toggle
@@ -92,6 +99,7 @@ export const DataProvider = ({ children }) => {
       const [
         herdsRes, 
         weatherRes, 
+        weatherMultiRes,
         waterRes, 
         grazingRes, 
         corridorsRes, 
@@ -99,10 +107,15 @@ export const DataProvider = ({ children }) => {
         conflictRes,
         historicalRes,
         newsRes,
-        statsRes
+        statsRes,
+        firesRes,
+        foodSecurityRes,
+        displacementRes,
+        dataSourcesRes,
       ] = await Promise.all([
         axios.get(`${API}/herds`).catch(e => ({ data: { herds: [] } })),
         axios.get(`${API}/weather`).catch(e => ({ data: null })),
+        axios.get(`${API}/weather/multi-location`).catch(e => ({ data: { locations: [] } })),
         axios.get(`${API}/water-sources`).catch(e => ({ data: { sources: [] } })),
         axios.get(`${API}/grazing-regions`).catch(e => ({ data: { regions: [] } })),
         axios.get(`${API}/corridors`).catch(e => ({ data: { corridors: [] } })),
@@ -111,10 +124,16 @@ export const DataProvider = ({ children }) => {
         axios.get(`${API}/historical-conflicts`).catch(e => ({ data: { conflicts: [] } })),
         axios.get(`${API}/news`).catch(e => ({ data: { articles: [] } })),
         axios.get(`${API}/stats`).catch(e => ({ data: null })),
+        axios.get(`${API}/fires`).catch(e => ({ data: { fires: [] } })),
+        axios.get(`${API}/food-security`).catch(e => ({ data: null })),
+        axios.get(`${API}/displacement`).catch(e => ({ data: null })),
+        axios.get(`${API}/data-sources`).catch(e => ({ data: { sources: [] } })),
       ]);
 
       setHerds(herdsRes.data?.herds || []);
+      setDataMethodology(herdsRes.data?.data_methodology || '');
       setWeather(weatherRes.data);
+      setWeatherMulti(weatherMultiRes.data?.locations || []);
       setWaterSources(waterRes.data?.sources || []);
       setGrazingRegions(grazingRes.data?.regions || []);
       setCorridors(corridorsRes.data?.corridors || []);
@@ -123,6 +142,10 @@ export const DataProvider = ({ children }) => {
       setHistoricalConflicts(historicalRes.data?.conflicts || []);
       setNews(newsRes.data?.articles || []);
       setStats(statsRes.data);
+      setFires(firesRes.data?.fires || []);
+      setFoodSecurity(foodSecurityRes.data);
+      setDisplacement(displacementRes.data);
+      setDataSources(dataSourcesRes.data?.sources || []);
       setLastUpdated(new Date().toISOString());
     } catch (err) {
       console.error('Failed to fetch data:', err);
@@ -172,6 +195,7 @@ export const DataProvider = ({ children }) => {
   const value = {
     herds,
     weather,
+    weatherMulti,
     waterSources,
     grazingRegions,
     corridors,
@@ -180,6 +204,11 @@ export const DataProvider = ({ children }) => {
     historicalConflicts,
     news,
     stats,
+    fires,
+    foodSecurity,
+    displacement,
+    dataSources,
+    dataMethodology,
     selectedHerd,
     setSelectedHerd: selectHerd,
     selectedConflictZone,
