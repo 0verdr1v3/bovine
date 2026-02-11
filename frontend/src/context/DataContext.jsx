@@ -62,10 +62,17 @@ export const DataProvider = ({ children }) => {
 
   // Safe select conflict zone function
   const selectConflictZone = useCallback((zone) => {
-    if (zone && typeof zone.lat === 'number' && typeof zone.lng === 'number' &&
-        !isNaN(zone.lat) && !isNaN(zone.lng)) {
+    if (zone && 
+        zone.lat !== undefined && zone.lat !== null &&
+        zone.lng !== undefined && zone.lng !== null &&
+        typeof zone.lat === 'number' && typeof zone.lng === 'number' &&
+        !isNaN(zone.lat) && !isNaN(zone.lng) &&
+        zone.lat >= -90 && zone.lat <= 90 &&
+        zone.lng >= -180 && zone.lng <= 180) {
       setSelectedConflictZone(zone);
       setSelectedHerd(null);
+    } else {
+      console.warn('Invalid conflict zone coordinates:', zone);
     }
   }, []);
 
