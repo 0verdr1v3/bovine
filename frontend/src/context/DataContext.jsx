@@ -1,0 +1,143 @@
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+const DataContext = createContext(null);
+
+export const useData = () => {
+  const context = useContext(DataContext);
+  if (!context) {
+    throw new Error('useData must be used within DataProvider');
+  }
+  return context;
+};
+
+export const DataProvider = ({ children }) => {
+  const [herds, setHerds] = useState([]);
+  const [weather, setWeather] = useState(null);
+  const [waterSources, setWaterSources] = useState([]);
+  const [grazingRegions, setGrazingRegions] = useState([]);
+  const [corridors, setCorridors] = useState([]);
+  const [ndviZones, setNdviZones] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [selectedHerd, setSelectedHerd] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  // Layer visibility state
+  const [layers, setLayers] = useState({
+    herds: true,
+    water: true,
+    ndvi: true,
+    corridors: true,
+  });
+
+  // Simple mode toggle
+  const [isSimpleMode, setIsSimpleMode] = useState(false);
+
+  const toggleLayer = useCallback((layerId) => {
+    setLayers(prev => ({ ...prev, [layerId]: !prev[layerId] }));
+  }, []);
+
+  const toggleSimpleMode = useCallback(() => {
+    setIsSimpleMode(prev => !prev);
+  }, []);
+
+  // Fetch all data
+  const fetchAllData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const [herdsRes, weatherRes, waterRes, grazingRes, corridorsRes, ndviRes, statsRes] = await Promise.all([
+        axios.get(`${API}/herds`).catch(e => ({ data: { herds: [] } })),
+        axios.get(`${API}/weather`).catch(e => ({ data: null })),
+        axios.get(`${API}/water-sources`).catch(e => ({ data: { sources: [] } })),
+        axios.get(`${API}/grazing-regions`).catch(e => ({ data: { regions: [] } })),
+        axios.get(`${API}/corridors`).catch(e => ({ data: { corridors: [] } })),
+        axios.get(`${API}/ndvi-zones`).catch(e => ({ data: { zones: [] } })),
+        axios.get(`${API}/stats`).catch(e => ({ data: null })),
+      ]);
+
+      setHerds(herdsRes.data?.herds || []);
+      setWeather(weatherRes.data);
+      setWaterSources(waterRes.data?.sources || []);
+      setGrazingRegions(grazingRes.data?.regions || []);
+      setCorridors(corridorsRes.data?.corridors || []);
+      setNdviZones(ndviRes.data?.zones || []);
+      setStats(statsRes.data);
+      setLastUpdated(new Date().toISOString());
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+      setError('Failed to load data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // AI Analysis
+  const analyzeWithAI = useCallback(async (query, context = {}) => {
+    try {
+      const response = await axios.post(`${API}/ai/analyze`, {
+        query,
+        context: {
+          ...context,
+          selectedHerd: selectedHerd,
+          weather: weather?.daily,
+        }
+      });
+      return response.data;
+    } catch (err) {
+      console.error('AI analysis error:', err);
+      throw new Error(err.response?.data?.detail || 'AI analysis failed');
+    }
+  }, [selectedHerd, weather]);
+
+  // Initial data load
+  useEffect(() => {
+    fetchAllData();
+    
+    // Refresh data every 5 minutes
+    const interval = setInterval(fetchAllData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchAllData]);
+
+  // Apply simple mode class to body
+  useEffect(() => {
+    if (isSimpleMode) {
+      document.body.classList.add('simple-mode');
+    } else {
+      document.body.classList.remove('simple-mode');
+    }
+  }, [isSimpleMode]);
+
+  const value = {
+    herds,
+    weather,
+    waterSources,
+    grazingRegions,
+    corridors,
+    ndviZones,
+    stats,
+    selectedHerd,
+    setSelectedHerd,
+    layers,
+    toggleLayer,
+    isSimpleMode,
+    toggleSimpleMode,
+    isLoading,
+    error,
+    lastUpdated,
+    fetchAllData,
+    analyzeWithAI,
+  };
+
+  return (
+    <DataContext.Provider value={value}>
+      {children}
+    </DataContext.Provider>
+  );
+};
