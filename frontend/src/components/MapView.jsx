@@ -255,26 +255,38 @@ const MapController = ({ selectedHerd, selectedConflictZone }) => {
   const map = useMap();
   
   useEffect(() => {
-    if (selectedHerd && 
-        typeof selectedHerd.lat === 'number' && 
-        typeof selectedHerd.lng === 'number' &&
-        !isNaN(selectedHerd.lat) && 
-        !isNaN(selectedHerd.lng) &&
-        selectedHerd.lat >= -90 && selectedHerd.lat <= 90 &&
-        selectedHerd.lng >= -180 && selectedHerd.lng <= 180) {
-      map.flyTo([selectedHerd.lat, selectedHerd.lng], 8, { duration: 0.8 });
+    try {
+      if (selectedHerd && 
+          selectedHerd.lat !== undefined && selectedHerd.lat !== null &&
+          selectedHerd.lng !== undefined && selectedHerd.lng !== null &&
+          typeof selectedHerd.lat === 'number' && 
+          typeof selectedHerd.lng === 'number' &&
+          !isNaN(selectedHerd.lat) && 
+          !isNaN(selectedHerd.lng) &&
+          selectedHerd.lat >= -90 && selectedHerd.lat <= 90 &&
+          selectedHerd.lng >= -180 && selectedHerd.lng <= 180) {
+        map.flyTo([selectedHerd.lat, selectedHerd.lng], 8, { duration: 0.8 });
+      }
+    } catch (e) {
+      console.warn('Map flyTo error for herd:', e);
     }
   }, [selectedHerd, map]);
 
   useEffect(() => {
-    if (selectedConflictZone && 
-        typeof selectedConflictZone.lat === 'number' && 
-        typeof selectedConflictZone.lng === 'number' &&
-        !isNaN(selectedConflictZone.lat) && 
-        !isNaN(selectedConflictZone.lng) &&
-        selectedConflictZone.lat >= -90 && selectedConflictZone.lat <= 90 &&
-        selectedConflictZone.lng >= -180 && selectedConflictZone.lng <= 180) {
-      map.flyTo([selectedConflictZone.lat, selectedConflictZone.lng], 8, { duration: 0.8 });
+    try {
+      if (selectedConflictZone && 
+          selectedConflictZone.lat !== undefined && selectedConflictZone.lat !== null &&
+          selectedConflictZone.lng !== undefined && selectedConflictZone.lng !== null &&
+          typeof selectedConflictZone.lat === 'number' && 
+          typeof selectedConflictZone.lng === 'number' &&
+          !isNaN(selectedConflictZone.lat) && 
+          !isNaN(selectedConflictZone.lng) &&
+          selectedConflictZone.lat >= -90 && selectedConflictZone.lat <= 90 &&
+          selectedConflictZone.lng >= -180 && selectedConflictZone.lng <= 180) {
+        map.flyTo([selectedConflictZone.lat, selectedConflictZone.lng], 8, { duration: 0.8 });
+      }
+    } catch (e) {
+      console.warn('Map flyTo error for conflict zone:', e);
     }
   }, [selectedConflictZone, map]);
   
