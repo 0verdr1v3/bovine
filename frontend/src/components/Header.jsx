@@ -2,18 +2,22 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useData } from '../context/DataContext';
 import { formatNumber } from '../lib/dataUtils';
-import { Satellite, Droplets, Activity, Radar, Sun, Moon } from 'lucide-react';
+import { Satellite, Droplets, Activity, Radar, Sun, Moon, AlertTriangle, Shield } from 'lucide-react';
 import { Switch } from './ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 export const Header = () => {
-  const { stats, lastUpdated, isSimpleMode, toggleSimpleMode, isLoading } = useData();
+  const { stats, lastUpdated, isSimpleMode, toggleSimpleMode, isLoading, conflictZones } = useData();
   const [currentTime, setCurrentTime] = React.useState(new Date());
 
   React.useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Count critical/high zones
+  const criticalCount = conflictZones?.filter(z => z.real_time_level === 'Critical').length || 0;
+  const highCount = conflictZones?.filter(z => z.real_time_level === 'High').length || 0;
 
   const statItems = [
     { 
@@ -40,6 +44,18 @@ export const Header = () => {
       icon: Satellite,
       color: 'text-success'
     },
+    { 
+      label: 'CRITICAL', 
+      value: criticalCount,
+      icon: AlertTriangle,
+      color: 'text-destructive'
+    },
+    { 
+      label: 'HIGH RISK', 
+      value: highCount,
+      icon: Shield,
+      color: 'text-warning'
+    },
   ];
 
   return (
@@ -61,7 +77,7 @@ export const Header = () => {
       </div>
 
       {/* Stats */}
-      <div className="hidden md:flex items-center gap-4 lg:gap-6">
+      <div className="hidden md:flex items-center gap-3 lg:gap-5">
         {statItems.map((stat, index) => (
           <motion.div
             key={stat.label}
@@ -87,13 +103,13 @@ export const Header = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-2">
-                <Sun className="h-3.5 w-3.5 text-muted-foreground" />
+                <Moon className="h-3.5 w-3.5 text-muted-foreground" />
                 <Switch 
                   checked={isSimpleMode}
                   onCheckedChange={toggleSimpleMode}
                   className="data-[state=checked]:bg-success"
                 />
-                <Moon className="h-3.5 w-3.5 text-muted-foreground" />
+                <Sun className="h-3.5 w-3.5 text-muted-foreground" />
               </div>
             </TooltipTrigger>
             <TooltipContent>
