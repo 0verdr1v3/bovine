@@ -1,9 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Circle, Polyline, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { motion } from 'framer-motion';
 import { useData } from '../context/DataContext';
-import { getNdviColor, getNdviLabel, getWaterColor, formatNumber, getDirectionArrow } from '../lib/dataUtils';
+import { getNdviColor, getNdviLabel, getWaterColor, formatNumber, getDirectionArrow, getConflictColor } from '../lib/dataUtils';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons
@@ -15,7 +15,6 @@ L.Icon.Default.mergeOptions({
 });
 
 // Map bounds for South Sudan
-const SOUTH_SUDAN_BOUNDS = [[3.5, 24], [12.5, 36]];
 const SOUTH_SUDAN_CENTER = [7.5, 30.5];
 
 // Custom herd marker component
@@ -90,6 +89,82 @@ const HerdMarker = ({ herd, isSelected, onClick }) => {
         </div>
       </Popup>
     </Marker>
+  );
+};
+
+// Conflict zone marker component
+const ConflictZoneMarker = ({ zone, isSelected, onClick }) => {
+  const color = getConflictColor(zone.real_time_level || zone.risk_level);
+  const riskScore = zone.real_time_risk || zone.risk_score;
+  
+  return (
+    <>
+      {/* Outer warning circle */}
+      <Circle
+        center={[zone.lat, zone.lng]}
+        radius={zone.radius}
+        pathOptions={{
+          color: color,
+          fillColor: color,
+          fillOpacity: isSelected ? 0.25 : 0.15,
+          weight: isSelected ? 3 : 2,
+          dashArray: zone.real_time_level === 'Critical' ? '' : '5, 10',
+        }}
+        eventHandlers={{ click: onClick }}
+      >
+        <Popup>
+          <div className="font-display text-base font-bold mb-2" style={{ color }}>
+            ⚠️ {zone.name}
+          </div>
+          <div className="space-y-1 text-[10px]">
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Risk Level:</span>
+              <span style={{ color, fontWeight: 'bold' }}>{zone.real_time_level || zone.risk_level}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Risk Score:</span>
+              <span style={{ color }}>{riskScore?.toFixed(0)}%</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Type:</span>
+              <span>{zone.conflict_type}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Ethnicities:</span>
+              <span>{zone.ethnicities_involved?.join(', ')}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Recent Incidents:</span>
+              <span>{zone.recent_incidents}</span>
+            </div>
+            {zone.nearby_herds !== undefined && (
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Nearby Herds:</span>
+                <span>{zone.nearby_herds}</span>
+              </div>
+            )}
+          </div>
+          <div className="mt-2 pt-2 border-t border-border text-[9px] text-muted-foreground">
+            {zone.description}
+          </div>
+        </Popup>
+      </Circle>
+      
+      {/* Center marker for critical zones */}
+      {(zone.real_time_level === 'Critical' || zone.real_time_level === 'High') && (
+        <CircleMarker
+          center={[zone.lat, zone.lng]}
+          radius={8}
+          pathOptions={{
+            color: color,
+            fillColor: color,
+            fillOpacity: 1,
+            weight: 2,
+          }}
+          eventHandlers={{ click: onClick }}
+        />
+      )}
+    </>
   );
 };
 
@@ -175,16 +250,33 @@ const MigrationCorridor = ({ points }) => {
   );
 };
 
-// Map controller for flying to selected herd
-const MapController = ({ selectedHerd }) => {
+// Map controller for flying to selected location
+const MapController = ({ selectedHerd, selectedConflictZone }) => {
   const map = useMap();
   
   useEffect(() => {
-    if (selectedHerd && selectedHerd.lat && selectedHerd.lng && 
-        !isNaN(selectedHerd.lat) && !isNaN(selectedHerd.lng)) {
+    if (selectedHerd && 
+        typeof selectedHerd.lat === 'number' && 
+        typeof selectedHerd.lng === 'number' &&
+        !isNaN(selectedHerd.lat) && 
+        !isNaN(selectedHerd.lng) &&
+        selectedHerd.lat >= -90 && selectedHerd.lat <= 90 &&
+        selectedHerd.lng >= -180 && selectedHerd.lng <= 180) {
       map.flyTo([selectedHerd.lat, selectedHerd.lng], 8, { duration: 0.8 });
     }
   }, [selectedHerd, map]);
+
+  useEffect(() => {
+    if (selectedConflictZone && 
+        typeof selectedConflictZone.lat === 'number' && 
+        typeof selectedConflictZone.lng === 'number' &&
+        !isNaN(selectedConflictZone.lat) && 
+        !isNaN(selectedConflictZone.lng) &&
+        selectedConflictZone.lat >= -90 && selectedConflictZone.lat <= 90 &&
+        selectedConflictZone.lng >= -180 && selectedConflictZone.lng <= 180) {
+      map.flyTo([selectedConflictZone.lat, selectedConflictZone.lng], 8, { duration: 0.8 });
+    }
+  }, [selectedConflictZone, map]);
   
   return null;
 };
@@ -218,12 +310,26 @@ const MapLegend = () => {
     { color: 'hsl(42, 82%, 53%)', label: 'Moderate grazing' },
     { color: 'hsl(15, 65%, 40%)', label: 'Dry / degraded' },
   ];
+
+  const conflictItems = [
+    { color: 'hsl(0, 85%, 50%)', label: 'Critical conflict zone' },
+    { color: 'hsl(25, 95%, 53%)', label: 'High risk zone' },
+    { color: 'hsl(42, 82%, 53%)', label: 'Medium risk zone' },
+  ];
   
   return (
     <div className="absolute bottom-8 right-3 z-[500] bg-background/90 border border-border p-2 font-mono text-[9px]">
+      <div className="mb-2 text-[8px] text-muted-foreground tracking-wider">GRAZING</div>
       {legendItems.map((item, i) => (
-        <div key={i} className="flex items-center gap-2 mb-1 last:mb-0">
+        <div key={i} className="flex items-center gap-2 mb-1">
           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+          <span className="text-foreground">{item.label}</span>
+        </div>
+      ))}
+      <div className="my-2 border-t border-border pt-2 text-[8px] text-muted-foreground tracking-wider">CONFLICT</div>
+      {conflictItems.map((item, i) => (
+        <div key={i} className="flex items-center gap-2 mb-1">
+          <div className="w-2.5 h-2.5 rounded-full border-2" style={{ borderColor: item.color, background: `${item.color}30` }} />
           <span className="text-foreground">{item.label}</span>
         </div>
       ))}
@@ -237,7 +343,19 @@ const MapLegend = () => {
 
 // Main Map Component
 export const MapView = () => {
-  const { herds, waterSources, ndviZones, corridors, selectedHerd, setSelectedHerd, layers, isSimpleMode } = useData();
+  const { 
+    herds, 
+    waterSources, 
+    ndviZones, 
+    corridors, 
+    conflictZones,
+    selectedHerd, 
+    setSelectedHerd, 
+    selectedConflictZone,
+    setSelectedConflictZone,
+    layers, 
+    isSimpleMode 
+  } = useData();
   
   // Tile layer based on mode
   const tileUrl = isSimpleMode 
@@ -256,7 +374,6 @@ export const MapView = () => {
         className="w-full h-full z-10"
         zoomControl={true}
         attributionControl={false}
-        maxBounds={SOUTH_SUDAN_BOUNDS}
         minZoom={5}
         maxZoom={12}
       >
@@ -267,7 +384,7 @@ export const MapView = () => {
         />
         
         {/* Map controller */}
-        <MapController selectedHerd={selectedHerd} />
+        <MapController selectedHerd={selectedHerd} selectedConflictZone={selectedConflictZone} />
         
         {/* NDVI Zones */}
         {layers.ndvi && ndviZones.map((zone, i) => (
@@ -277,6 +394,16 @@ export const MapView = () => {
         {/* Migration Corridors */}
         {layers.corridors && corridors.map((corridor, i) => (
           <MigrationCorridor key={i} points={corridor} />
+        ))}
+
+        {/* Conflict Zones */}
+        {layers.conflicts && conflictZones.map((zone) => (
+          <ConflictZoneMarker
+            key={zone.id}
+            zone={zone}
+            isSelected={selectedConflictZone?.id === zone.id}
+            onClick={() => setSelectedConflictZone(zone)}
+          />
         ))}
         
         {/* Water Sources */}
