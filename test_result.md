@@ -223,6 +223,6 @@ test_plan:
 
 agent_communication:
     - agent: "testing"
-    - message: "Starting comprehensive testing of BOVINE Cattle Movement Intelligence dashboard at https://grazingpulse.preview.emergentagent.com. Will test all major functionality including initial load, tab interactions, AI analysis, map features, and mode toggle."
+    - message: "Starting comprehensive testing of BOVINE Cattle Movement Intelligence dashboard at https://bovine-forecast.preview.emergentagent.com. Will test all major functionality including initial load, tab interactions, AI analysis, map features, and mode toggle."
     - agent: "testing"
     - message: "✅ TESTING COMPLETED SUCCESSFULLY: All 7 major dashboard features are working properly. Dashboard loads with proper header stats, left/right panel tabs function correctly, map shows South Sudan with interactive herd markers and conflict zones, AI analysis interface is functional, and mode toggle works. No critical issues found. Ready for production use."
