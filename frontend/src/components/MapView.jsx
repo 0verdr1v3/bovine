@@ -400,13 +400,44 @@ export const MapView = () => {
     selectedConflictZone,
     setSelectedConflictZone,
     layers, 
-    isSimpleMode 
+    isSimpleMode,
+    lastUpdated
   } = useData();
+
+  const [satelliteMode, setSatelliteMode] = React.useState(false);
   
   // Tile layer based on mode
-  const tileUrl = isSimpleMode 
-    ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  const getTileUrl = () => {
+    if (satelliteMode) {
+      // ESRI World Imagery - High resolution satellite
+      return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+    }
+    return isSimpleMode 
+      ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  };
+
+  const getTileAttribution = () => {
+    if (satelliteMode) {
+      return 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP';
+    }
+    return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+  };
+
+  // Format last updated time
+  const formatLastUpdated = () => {
+    if (!lastUpdated) return 'Loading...';
+    const date = new Date(lastUpdated);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return date.toLocaleDateString('en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <motion.div 
@@ -421,19 +452,21 @@ export const MapView = () => {
         zoomControl={true}
         attributionControl={false}
         minZoom={5}
-        maxZoom={12}
+        maxZoom={18}
       >
         <TileLayer
-          url={tileUrl}
+          key={`${satelliteMode}-${isSimpleMode}`}
+          url={getTileUrl()}
           maxZoom={18}
-          subdomains="abcd"
+          subdomains={satelliteMode ? [] : ['a', 'b', 'c', 'd']}
+          attribution={getTileAttribution()}
         />
         
         {/* Map controller */}
         <MapController selectedHerd={selectedHerd} selectedConflictZone={selectedConflictZone} />
         
         {/* NDVI Zones */}
-        {layers.ndvi && ndviZones.map((zone, i) => (
+        {layers.ndvi && !satelliteMode && ndviZones.map((zone, i) => (
           <NDVIZone key={i} zone={zone} />
         ))}
         
@@ -448,7 +481,7 @@ export const MapView = () => {
             key={zone.id}
             zone={zone}
             isSelected={selectedConflictZone?.id === zone.id}
-            onClick={() => setSelectedConflictZone(zone)}
+            onClick={setSelectedConflictZone}
           />
         ))}
         
@@ -463,13 +496,36 @@ export const MapView = () => {
             key={herd.id}
             herd={herd}
             isSelected={selectedHerd?.id === herd.id}
-            onClick={() => setSelectedHerd(herd)}
+            onClick={setSelectedHerd}
           />
         ))}
         
         {/* Coordinates display */}
         <CoordinatesDisplay />
       </MapContainer>
+
+      {/* Satellite toggle button */}
+      <div className="absolute top-3 left-3 z-[500] flex flex-col gap-2">
+        <button
+          onClick={() => setSatelliteMode(!satelliteMode)}
+          className={`px-3 py-1.5 font-mono text-[9px] tracking-wider transition-colors ${
+            satelliteMode 
+              ? 'bg-accent text-accent-foreground' 
+              : 'bg-card/90 text-muted-foreground hover:text-foreground'
+          } border border-border`}
+        >
+          {satelliteMode ? '🛰️ SATELLITE ON' : '🗺️ MAP VIEW'}
+        </button>
+      </div>
+
+      {/* Last Updated indicator */}
+      <div className="absolute top-3 right-3 z-[500] bg-card/90 border border-border px-3 py-1.5">
+        <div className="font-mono text-[8px] text-muted-foreground tracking-wider">LAST UPDATED</div>
+        <div className="font-mono text-[10px] text-success flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-success pulse-live" />
+          {formatLastUpdated()}
+        </div>
+      </div>
       
       {/* Legend */}
       <MapLegend />
