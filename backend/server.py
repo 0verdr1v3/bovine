@@ -712,8 +712,8 @@ Be analytical, direct, and brief. Use bullet points. Quantify predictions where 
             system_message=system_prompt
         )
         
-        # Set the model
-        llm = llm.with_model("claude-sonnet-4-20250514")
+        # Set the model - provider is "anthropic" for Claude
+        llm = llm.with_model("anthropic", "claude-sonnet-4-20250514")
         
         # Send the message
         response_text = await llm.send_message(UserMessage(content=request.query))
