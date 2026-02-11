@@ -101,3 +101,112 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Test the BOVINE Cattle Movement Intelligence dashboard functionality including initial load, herds tab, conflicts tab, news tab, AI analysis, map interactions, and mode toggle"
+
+frontend:
+  - task: "Dashboard Initial Load"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/Dashboard.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Need to test dashboard loads with header stats, left panel tabs, map with South Sudan, and right panel tabs"
+
+  - task: "Herds Tab Functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/LeftPanel.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Need to test clicking herd cards, map fly-to functionality, and right panel herd details"
+
+  - task: "Conflicts Tab Functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/LeftPanel.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Need to test conflicts tab, clicking Pibor-Murle Corridor, map fly-to, and zone details in right panel"
+
+  - task: "News Tab Functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/LeftPanel.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Need to test news tab displays curated news articles"
+
+  - task: "AI Analysis Functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/RightPanel.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Need to test AI tab, quick question presets like 'Predict next conflict hotspot', and AI response"
+
+  - task: "Map Interactions"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/MapView.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Need to test conflict zones as colored circles, clickable herd markers (cattle emoji), and map legend visibility"
+
+  - task: "Mode Toggle Functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/Header.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Need to test Simple/Tactical mode switch in header changes map style from dark to light tiles"
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 1
+
+test_plan:
+  current_focus:
+    - "Dashboard Initial Load"
+    - "Herds Tab Functionality"
+    - "Conflicts Tab Functionality"
+    - "News Tab Functionality"
+    - "AI Analysis Functionality"
+    - "Map Interactions"
+    - "Mode Toggle Functionality"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "testing"
+    - message: "Starting comprehensive testing of BOVINE Cattle Movement Intelligence dashboard at https://grazingpulse.preview.emergentagent.com. Will test all major functionality including initial load, tab interactions, AI analysis, map features, and mode toggle."
