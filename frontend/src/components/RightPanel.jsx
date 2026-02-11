@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../context/DataContext';
 import { getNdviColor, getNdviLabel, formatNumber, getDirectionArrow, calculatePressureScore, getConflictColor } from '../lib/dataUtils';
@@ -23,41 +23,49 @@ import {
   MapPin,
   Crosshair,
   Satellite,
-  Database
+  Database,
+  Flame,
+  CloudRain,
+  Wheat,
+  Activity,
+  Globe,
+  CheckCircle,
+  XCircle,
+  Clock
 } from 'lucide-react';
 
-// AI Quick Questions - Updated with conflict focus
+// AI Quick Questions
 const AI_PRESETS = [
   {
     icon: '⚠️',
     label: 'Predict next conflict hotspot',
-    query: 'Based on current herd movements, water stress, and historical patterns, where is the most likely location for the next cattle-related conflict in the next 14 days?'
+    query: 'Based on current herd movements, water stress, and historical ACLED data, where is the most likely location for the next cattle-related conflict in the next 14 days?'
   },
   {
     icon: '🎯',
     label: 'Pibor corridor analysis',
-    query: 'Analyze the Pibor-Murle corridor: which herds are converging, what is the conflict probability, and what early warning indicators should UN monitors watch?'
+    query: 'Analyze the Pibor-Murle corridor: which herds are converging, what is the conflict probability based on ACLED historical data, and what early warning indicators should UN monitors watch?'
   },
   {
     icon: '🌿',
     label: 'Grazing shortage + conflict link',
-    query: 'Which herds face the most serious grazing shortage, and how does this increase inter-ethnic conflict risk? Quantify the displacement probability.'
+    query: 'Which herds face the most serious grazing shortage based on Sentinel-2 NDVI data, and how does this increase inter-ethnic conflict risk? Reference ACLED data for historical patterns.'
   },
   {
     icon: '💧',
     label: 'Water source pressure analysis',
-    query: 'Which water sources are under the most pressure from converging herds? What are the 2nd-order effects on community tensions?'
+    query: 'Which water sources from OSM data are under the most pressure from converging herds? What are the 2nd-order effects on community tensions?'
   },
   {
-    icon: '🧭',
-    label: 'Movement + violence prediction',
-    query: 'Model likely herd movements over the next 7-14 days. Where do ethnic territories overlap with predicted movement paths? What violence risk does this create?'
+    icon: '🔥',
+    label: 'Fire impact on movement',
+    query: 'Are there any active fires from NASA FIRMS affecting cattle movement patterns? How might this trigger displacement or conflict?'
   },
 ];
 
 // AI Analysis Tab
 const AITab = () => {
-  const { analyzeWithAI, selectedHerd, selectedConflictZone } = useData();
+  const { analyzeWithAI, selectedHerd, selectedConflictZone, dataSources } = useData();
   const [query, setQuery] = useState('');
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -108,7 +116,7 @@ const AITab = () => {
       <div className="mb-3">
         <div className="tactical-label mb-2 flex items-center gap-2">
           <Sparkles className="h-3 w-3" />
-          AI Analysis
+          AI Analysis (Claude via Emergent LLM)
         </div>
         <div className="space-y-1">
           {AI_PRESETS.map((preset, i) => (
@@ -165,7 +173,7 @@ const AITab = () => {
           <div className="font-mono text-[11px] leading-relaxed bg-muted border border-border p-3 min-h-[150px]">
             {isLoading ? (
               <div className="ai-thinking text-muted-foreground">
-                Analyzing intelligence data...
+                Analyzing real data from ACLED, Open-Meteo, FAO, Sentinel-2...
               </div>
             ) : error ? (
               <div className="text-destructive">
@@ -177,6 +185,9 @@ const AITab = () => {
             ) : (
               <div className="text-muted-foreground">
                 Select a herd or conflict zone for context, then ask about predictions, risks, or movements.
+                <div className="mt-2 text-[9px] text-primary">
+                  Data sources: ACLED · FAO · Sentinel-2 · NASA FIRMS · Open-Meteo · ReliefWeb · IGAD
+                </div>
               </div>
             )}
           </div>
@@ -186,7 +197,7 @@ const AITab = () => {
   );
 };
 
-// Herd Detail Tab
+// Herd Detail Tab - FIXED
 const HerdDetailTab = () => {
   const { selectedHerd } = useData();
 
@@ -304,7 +315,24 @@ const HerdDetailTab = () => {
           {selectedHerd.note}
         </div>
 
-        {/* Evidence Section - WHY WE KNOW THE CATTLE ARE HERE */}
+        {/* Data Sources Used */}
+        {selectedHerd.data_sources && (
+          <div className="bg-accent/5 border border-accent/20 p-2.5">
+            <div className="tactical-label mb-1 text-accent flex items-center gap-1">
+              <Database className="h-3 w-3" />
+              DATA SOURCES
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {selectedHerd.data_sources.map((source, i) => (
+                <Badge key={i} variant="outline" className="text-[8px] font-mono">
+                  {source}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Evidence Section */}
         {evidence && (
           <div className="space-y-3">
             {/* Primary Indicators */}
@@ -379,7 +407,7 @@ const ConflictDetailTab = () => {
   // Find related historical conflicts
   const relatedConflicts = historicalConflicts.filter(c => {
     const dist = Math.sqrt(Math.pow(c.lat - zone.lat, 2) + Math.pow(c.lng - zone.lng, 2));
-    return dist < 0.5; // Within ~50km
+    return dist < 0.5;
   });
 
   return (
@@ -414,13 +442,20 @@ const ConflictDetailTab = () => {
             </div>
           </div>
 
-          <Badge 
-            variant="outline" 
-            className="font-mono text-[10px] font-bold"
-            style={{ color, borderColor: `${color}50`, backgroundColor: `${color}10` }}
-          >
-            {zone.real_time_level || zone.risk_level} RISK
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge 
+              variant="outline" 
+              className="font-mono text-[10px] font-bold"
+              style={{ color, borderColor: `${color}50`, backgroundColor: `${color}10` }}
+            >
+              {zone.real_time_level || zone.risk_level} RISK
+            </Badge>
+            {zone.source && (
+              <Badge variant="outline" className="font-mono text-[8px]">
+                {zone.source}
+              </Badge>
+            )}
+          </div>
         </motion.div>
 
         {/* Risk Factors */}
@@ -479,6 +514,26 @@ const ConflictDetailTab = () => {
           {zone.description}
         </div>
 
+        {/* ACLED Raw Events if available */}
+        {zone.raw_events && zone.raw_events.length > 0 && (
+          <div>
+            <div className="tactical-label mb-2">ACLED VERIFIED EVENTS</div>
+            <div className="space-y-1">
+              {zone.raw_events.slice(0, 3).map((event, i) => (
+                <div key={i} className="bg-destructive/5 border border-destructive/20 p-2 text-[10px]">
+                  <div className="flex justify-between mb-1">
+                    <span className="font-bold">{event.event_type}</span>
+                    <span className="text-muted-foreground">{event.event_date}</span>
+                  </div>
+                  <div className="text-muted-foreground">
+                    {event.location} · {event.fatalities} fatalities
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Historical Conflicts */}
         {relatedConflicts.length > 0 && (
           <div>
@@ -491,7 +546,7 @@ const ConflictDetailTab = () => {
                     <span className="text-muted-foreground">{conflict.date}</span>
                   </div>
                   <div className="text-muted-foreground">
-                    {conflict.casualties} casualties · {formatNumber(conflict.cattle_stolen)} cattle stolen
+                    {conflict.casualties} casualties · {formatNumber(conflict.cattle_stolen || 0)} cattle stolen
                   </div>
                 </div>
               ))}
@@ -503,147 +558,113 @@ const ConflictDetailTab = () => {
   );
 };
 
-// Forecast Tab
-const ForecastTab = () => {
-  const { herds, weather, conflictZones } = useData();
+// Food Security Tab - NEW
+const FoodSecurityTab = () => {
+  const { foodSecurity, displacement, grazingRegions } = useData();
 
-  const rain14d = weather?.daily?.precipitation_sum?.reduce((a, b) => a + (b || 0), 0) || 0;
-  const dryDays = weather?.daily?.precipitation_sum?.filter(r => (r || 0) < 1).length || 0;
-  const avgNdvi = herds.length ? herds.reduce((s, h) => s + h.ndvi, 0) / herds.length : 0;
-  const lowWaterHerds = herds.filter(h => h.water_days <= 3).length;
-  const criticalZones = conflictZones.filter(z => z.real_time_level === 'Critical').length;
-  const highRiskZones = conflictZones.filter(z => z.real_time_level === 'High').length;
-
-  const forecastInputs = [
-    { label: '14-day total rainfall', value: `${rain14d.toFixed(1)}mm`, color: rain14d > 50 ? 'text-accent' : rain14d > 20 ? 'text-foreground' : 'text-warning' },
-    { label: 'Dry days in forecast', value: `${dryDays} of 14`, color: dryDays > 10 ? 'text-warning' : 'text-success' },
-    { label: 'Average NDVI (region)', value: avgNdvi.toFixed(2), color: avgNdvi < 0.4 ? 'text-warning' : 'text-success' },
-    { label: 'Herds with <3 days water', value: lowWaterHerds, color: lowWaterHerds > 3 ? 'text-destructive' : 'text-warning' },
-    { label: 'Critical conflict zones', value: criticalZones, color: criticalZones > 0 ? 'text-destructive' : 'text-success' },
-    { label: 'High risk zones', value: highRiskZones, color: highRiskZones > 2 ? 'text-warning' : 'text-foreground' },
-  ];
-
-  // Calculate pressure scores
-  const pressures = herds.map(h => ({
-    ...h,
-    score: calculatePressureScore(h)
-  })).sort((a, b) => b.score - a.score);
+  const getPhaseColor = (phase) => {
+    const colors = {
+      1: 'text-success',
+      2: 'text-warning',
+      3: 'text-orange-500',
+      4: 'text-destructive',
+      5: 'text-destructive font-bold'
+    };
+    return colors[phase] || 'text-foreground';
+  };
 
   return (
     <ScrollArea className="h-full">
       <div className="p-3 space-y-4">
-        <h3 className="font-display text-base font-bold tracking-wide">Predictive Model</h3>
+        <h3 className="font-display text-base font-bold tracking-wide flex items-center gap-2">
+          <Wheat className="h-4 w-4 text-warning" />
+          Food Security & Humanitarian
+        </h3>
         
-        {/* Forecast Inputs */}
-        <div>
-          <div className="tactical-label mb-2">LIVE INPUT DATA</div>
-          <div className="space-y-0">
-            {forecastInputs.map((input, i) => (
-              <motion.div
-                key={input.label}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex justify-between py-1.5 border-b border-border font-mono text-[10px]"
-              >
-                <span className="text-muted-foreground">{input.label}</span>
-                <span className={`font-bold ${input.color}`}>{input.value}</span>
-              </motion.div>
+        {/* IPC Phase Overview */}
+        {foodSecurity?.data?.current_phase && (
+          <div className="bg-muted border border-border p-3">
+            <div className="tactical-label mb-2 flex items-center gap-2">
+              <AlertTriangle className="h-3 w-3 text-warning" />
+              IPC CLASSIFICATION (FEWS NET)
+            </div>
+            <div className="text-sm font-bold text-warning mb-2">
+              {foodSecurity.data.current_phase.overall}
+            </div>
+            <div className="space-y-1">
+              {foodSecurity.data.current_phase.regions?.map((region, i) => (
+                <div key={i} className="flex justify-between text-[10px] py-1 border-b border-border/30 last:border-0">
+                  <span>{region.name}</span>
+                  <span className={getPhaseColor(region.phase)}>
+                    Phase {region.phase} - {region.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 pt-2 border-t border-border text-[10px] text-muted-foreground">
+              Affected: {foodSecurity.data.affected_population}
+            </div>
+          </div>
+        )}
+
+        {/* Displacement Summary */}
+        {displacement?.summary && (
+          <div className="bg-muted border border-border p-3">
+            <div className="tactical-label mb-2 flex items-center gap-2">
+              <Users className="h-3 w-3 text-accent" />
+              DISPLACEMENT (UNHCR/IOM)
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-lg font-bold text-primary">{displacement.summary.total_idps}</div>
+                <div className="text-[9px] text-muted-foreground">Internal IDPs</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-accent">{displacement.summary.total_refugees}</div>
+                <div className="text-[9px] text-muted-foreground">Refugees</div>
+              </div>
+            </div>
+            <div className="mt-2 text-[9px] text-muted-foreground">
+              {displacement.summary.note}
+            </div>
+          </div>
+        )}
+
+        {/* Grazing Conditions */}
+        <div className="bg-muted border border-border p-3">
+          <div className="tactical-label mb-2 flex items-center gap-2">
+            <Satellite className="h-3 w-3 text-success" />
+            GRAZING CONDITIONS (SENTINEL-2)
+          </div>
+          <div className="space-y-1">
+            {grazingRegions.map((region, i) => (
+              <div key={i} className="flex justify-between items-center text-[10px] py-1 border-b border-border/30 last:border-0">
+                <span>{region.name}</span>
+                <div className="flex items-center gap-2">
+                  <span style={{ color: getNdviColor(region.ndvi) }}>
+                    NDVI: {region.ndvi.toFixed(2)}
+                  </span>
+                  <Badge variant="outline" className={`text-[7px] ${
+                    region.pressure === 'High' ? 'text-destructive border-destructive' :
+                    region.pressure === 'Medium' ? 'text-warning border-warning' :
+                    'text-success border-success'
+                  }`}>
+                    {region.pressure}
+                  </Badge>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-
-        {/* Movement Pressures */}
-        <div>
-          <div className="tactical-label mb-2">MOVEMENT PRESSURE INDEX</div>
-          <div className="space-y-2">
-            {pressures.slice(0, 5).map((herd, i) => {
-              const color = herd.score > 65 ? 'hsl(42, 82%, 53%)' : herd.score > 40 ? 'hsl(var(--foreground))' : 'hsl(152, 65%, 45%)';
-              return (
-                <motion.div
-                  key={herd.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <div className="flex justify-between font-mono text-[9px] text-muted-foreground mb-1">
-                    <span>{herd.name} · {herd.trend}</span>
-                    <span style={{ color }}>{herd.score}%</span>
-                  </div>
-                  <div className="h-1.5 bg-card border border-border overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${herd.score}%` }}
-                      transition={{ duration: 0.5, delay: i * 0.1 }}
-                      className="h-full"
-                      style={{ backgroundColor: color }}
-                    />
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Model Info */}
-        <div className="font-mono text-[9px] text-muted-foreground leading-relaxed border-t border-border pt-3 mt-3">
-          <p className="mb-2 text-primary">PREDICTION MODEL INPUTS:</p>
-          <ul className="space-y-0.5">
-            <li>· Open-Meteo precipitation (LIVE)</li>
-            <li>· NDVI vegetation index</li>
-            <li>· Historical conflict patterns</li>
-            <li>· Ethnic territory boundaries</li>
-            <li>· Water source proximity</li>
-            <li>· Herd convergence analysis</li>
-          </ul>
         </div>
       </div>
     </ScrollArea>
   );
 };
 
-// Data Sources Tab
+// Data Sources Tab - ENHANCED
 const DataSourcesTab = () => {
-  const { weather, fetchAllData } = useData();
+  const { dataSources, fetchAllData, fires, weather } = useData();
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const dataSources = [
-    {
-      name: 'Open-Meteo Weather',
-      status: weather?.status === 'live' ? 'connected' : 'cached',
-      description: 'Real-time 14-day rainfall & temperature forecast.',
-      tag: 'LIVE',
-      tagClass: 'bg-success/10 text-success border-success/30',
-    },
-    {
-      name: 'Conflict Zone Database',
-      status: 'connected',
-      description: '8 monitored zones with real-time risk calculation.',
-      tag: 'LIVE',
-      tagClass: 'bg-success/10 text-success border-success/30',
-    },
-    {
-      name: 'Historical Conflicts',
-      status: 'connected',
-      description: 'Backtested conflict data from 2024.',
-      tag: 'DATABASE',
-      tagClass: 'bg-accent/10 text-accent border-accent/30',
-    },
-    {
-      name: 'Claude AI Analysis',
-      status: 'connected',
-      description: 'AI-powered conflict & movement predictions.',
-      tag: 'EMERGENT LLM',
-      tagClass: 'bg-primary/10 text-primary border-primary/30',
-    },
-    {
-      name: 'News Feed',
-      status: 'connected',
-      description: 'Curated South Sudan cattle & conflict news.',
-      tag: 'CURATED',
-      tagClass: 'bg-warning/10 text-warning border-warning/30',
-    },
-  ];
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -651,11 +672,33 @@ const DataSourcesTab = () => {
     setIsRefreshing(false);
   };
 
+  const getStatusIcon = (status) => {
+    if (status === 'connected') return <CheckCircle className="h-3 w-3 text-success" />;
+    if (status === 'limited' || status === 'cached') return <Clock className="h-3 w-3 text-warning" />;
+    return <XCircle className="h-3 w-3 text-destructive" />;
+  };
+
+  const getTypeColor = (type) => {
+    const colors = {
+      'LIVE': 'bg-success/10 text-success border-success/30',
+      'CACHED': 'bg-warning/10 text-warning border-warning/30',
+      'REFERENCE': 'bg-accent/10 text-accent border-accent/30',
+      'DERIVED': 'bg-primary/10 text-primary border-primary/30',
+      'STATIC': 'bg-muted text-muted-foreground border-border',
+      'AI': 'bg-primary/10 text-primary border-primary/30',
+      'LIMITED': 'bg-warning/10 text-warning border-warning/30',
+    };
+    return colors[type] || 'bg-muted text-foreground border-border';
+  };
+
   return (
     <ScrollArea className="h-full">
       <div className="p-3 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-display text-base font-bold tracking-wide">Data Sources</h3>
+          <h3 className="font-display text-base font-bold tracking-wide flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            Data Sources
+          </h3>
           <Button 
             variant="outline" 
             size="sm"
@@ -664,37 +707,76 @@ const DataSourcesTab = () => {
             className="font-mono text-[9px]"
           >
             <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            Refresh All
           </Button>
         </div>
 
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-success/5 border border-success/20 p-2 text-center">
+            <div className="text-lg font-bold text-success">
+              {dataSources.filter(s => s.status === 'connected').length}
+            </div>
+            <div className="text-[8px] text-muted-foreground">LIVE</div>
+          </div>
+          <div className="bg-warning/5 border border-warning/20 p-2 text-center">
+            <div className="text-lg font-bold text-warning">
+              {fires?.length || 0}
+            </div>
+            <div className="text-[8px] text-muted-foreground">FIRES</div>
+          </div>
+          <div className="bg-accent/5 border border-accent/20 p-2 text-center">
+            <div className="text-lg font-bold text-accent">
+              {weather?.status === 'live' ? '✓' : '—'}
+            </div>
+            <div className="text-[8px] text-muted-foreground">WEATHER</div>
+          </div>
+        </div>
+
+        {/* Data Sources List */}
         <div className="space-y-2">
           {dataSources.map((source, i) => (
             <motion.div
               key={source.name}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
+              transition={{ delay: i * 0.03 }}
               className="bg-muted border border-border p-3"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    source.status === 'connected' ? 'bg-success pulse-live' :
-                    source.status === 'cached' ? 'bg-warning' :
-                    'bg-muted-foreground'
-                  }`} />
+                  {getStatusIcon(source.status)}
                   <span className="font-display text-sm font-bold">{source.name}</span>
                 </div>
-                <Badge variant="outline" className={`font-mono text-[7px] ${source.tagClass}`}>
-                  {source.tag}
+                <Badge variant="outline" className={`font-mono text-[7px] ${getTypeColor(source.type)}`}>
+                  {source.type}
                 </Badge>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
                 {source.description}
               </p>
+              {source.url && (
+                <a 
+                  href={source.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[9px] text-primary hover:underline mt-1 block"
+                >
+                  {source.url}
+                </a>
+              )}
             </motion.div>
           ))}
+        </div>
+
+        {/* Methodology Note */}
+        <div className="bg-primary/5 border border-primary/20 p-3">
+          <div className="tactical-label mb-1 text-primary">DATA METHODOLOGY</div>
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Herd locations are evidence-based estimates derived from FAO livestock census, 
+            Sentinel-2 NDVI, NASA FIRMS fire detection, historical IGAD migration patterns, 
+            and ground reports from UNMISS, IOM, and WFP. No data is simulated.
+          </p>
         </div>
       </div>
     </ScrollArea>
@@ -703,9 +785,11 @@ const DataSourcesTab = () => {
 
 // Main Right Panel Component
 export const RightPanel = () => {
+  const [activeTab, setActiveTab] = useState('ai');
+
   return (
     <div className="h-full flex flex-col bg-card border-l border-border overflow-hidden">
-      <Tabs defaultValue="ai" className="flex-1 flex flex-col min-h-0">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <TabsList className="w-full grid grid-cols-5 h-10 rounded-none border-b border-border bg-transparent">
           <TabsTrigger 
             value="ai" 
@@ -726,10 +810,10 @@ export const RightPanel = () => {
             ZONE
           </TabsTrigger>
           <TabsTrigger 
-            value="forecast"
-            className="font-mono text-[8px] tracking-widest data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            value="food"
+            className="font-mono text-[8px] tracking-widest data-[state=active]:text-warning data-[state=active]:border-b-2 data-[state=active]:border-warning rounded-none"
           >
-            MODEL
+            FOOD
           </TabsTrigger>
           <TabsTrigger 
             value="data"
@@ -749,8 +833,8 @@ export const RightPanel = () => {
           <TabsContent value="conflict" className="h-full m-0 mt-0 data-[state=active]:h-full">
             <ConflictDetailTab />
           </TabsContent>
-          <TabsContent value="forecast" className="h-full m-0 mt-0 data-[state=active]:h-full">
-            <ForecastTab />
+          <TabsContent value="food" className="h-full m-0 mt-0 data-[state=active]:h-full">
+            <FoodSecurityTab />
           </TabsContent>
           <TabsContent value="data" className="h-full m-0 mt-0 data-[state=active]:h-full">
             <DataSourcesTab />
