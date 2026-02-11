@@ -112,31 +112,31 @@ const ConflictZoneMarker = ({ zone, isSelected, onClick }) => {
   const color = getConflictColor(zone.real_time_level || zone.risk_level);
   const riskScore = zone.real_time_risk || zone.risk_score;
   
-  // Validate zone coordinates before rendering
-  if (!zone || typeof zone.lat !== 'number' || typeof zone.lng !== 'number' ||
-      isNaN(zone.lat) || isNaN(zone.lng)) {
+  // Validate zone coordinates - must have valid numbers
+  const lat = parseFloat(zone?.lat);
+  const lng = parseFloat(zone?.lng);
+  
+  if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
+    console.warn('Invalid conflict zone coordinates:', zone);
     return null;
   }
 
-  const handleClick = (e) => {
-    // Prevent the event from bubbling and pass the zone object
-    if (e && e.originalEvent) {
-      e.originalEvent.stopPropagation();
-    }
-    // Pass a clean copy of the zone with validated coordinates
-    onClick({
+  const handleClick = () => {
+    // Create a clean zone object with guaranteed valid coordinates
+    const cleanZone = {
       ...zone,
-      lat: Number(zone.lat),
-      lng: Number(zone.lng)
-    });
+      lat: lat,
+      lng: lng
+    };
+    onClick(cleanZone);
   };
   
   return (
     <>
       {/* Outer warning circle */}
       <Circle
-        center={[Number(zone.lat), Number(zone.lng)]}
-        radius={zone.radius}
+        center={[lat, lng]}
+        radius={zone.radius || 30000}
         pathOptions={{
           color: color,
           fillColor: color,
@@ -187,7 +187,7 @@ const ConflictZoneMarker = ({ zone, isSelected, onClick }) => {
       {/* Center marker for critical zones */}
       {(zone.real_time_level === 'Critical' || zone.real_time_level === 'High') && (
         <CircleMarker
-          center={[Number(zone.lat), Number(zone.lng)]}
+          center={[lat, lng]}
           radius={8}
           pathOptions={{
             color: color,
