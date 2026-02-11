@@ -411,10 +411,12 @@ export const MapView = () => {
     setSelectedConflictZone,
     layers, 
     isSimpleMode,
-    lastUpdated
+    lastUpdated,
+    weather
   } = useData();
 
-  const [satelliteMode, setSatelliteMode] = React.useState(false);
+  const [satelliteMode, setSatelliteMode] = React.useState(true); // Default to satellite
+  const [showWeatherOverlay, setShowWeatherOverlay] = React.useState(true); // Weather overlay on by default
   
   // Tile layer based on mode
   const getTileUrl = () => {
@@ -449,6 +451,16 @@ export const MapView = () => {
     return date.toLocaleDateString('en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
+  // Get weather summary for overlay
+  const getWeatherSummary = () => {
+    if (!weather?.daily) return null;
+    const rain7d = weather.daily.precipitation_sum?.slice(0, 7).reduce((a, b) => a + (b || 0), 0) || 0;
+    const avgTemp = weather.daily.temperature_2m_max?.slice(0, 7).reduce((a, b) => a + (b || 0), 0) / 7 || 0;
+    return { rain7d: rain7d.toFixed(1), avgTemp: avgTemp.toFixed(1) };
+  };
+
+  const weatherSummary = getWeatherSummary();
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -471,11 +483,20 @@ export const MapView = () => {
           subdomains={satelliteMode ? [] : ['a', 'b', 'c', 'd']}
           attribution={getTileAttribution()}
         />
+
+        {/* Weather precipitation overlay - OpenWeatherMap */}
+        {showWeatherOverlay && (
+          <TileLayer
+            url="https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=9de243494c0b295cca9337e1e96b00e2"
+            opacity={0.5}
+            maxZoom={18}
+          />
+        )}
         
         {/* Map controller */}
         <MapController selectedHerd={selectedHerd} selectedConflictZone={selectedConflictZone} />
         
-        {/* NDVI Zones */}
+        {/* NDVI Zones - hide on satellite mode for clarity */}
         {layers.ndvi && !satelliteMode && ndviZones.map((zone, i) => (
           <NDVIZone key={i} zone={zone} />
         ))}
@@ -514,7 +535,7 @@ export const MapView = () => {
         <CoordinatesDisplay />
       </MapContainer>
 
-      {/* Satellite toggle button */}
+      {/* Map controls - top left */}
       <div className="absolute top-3 left-3 z-[500] flex flex-col gap-2">
         <button
           onClick={() => setSatelliteMode(!satelliteMode)}
@@ -524,9 +545,30 @@ export const MapView = () => {
               : 'bg-card/90 text-muted-foreground hover:text-foreground'
           } border border-border`}
         >
-          {satelliteMode ? '🛰️ SATELLITE ON' : '🗺️ MAP VIEW'}
+          {satelliteMode ? '🛰️ SATELLITE' : '🗺️ MAP'}
+        </button>
+        <button
+          onClick={() => setShowWeatherOverlay(!showWeatherOverlay)}
+          className={`px-3 py-1.5 font-mono text-[9px] tracking-wider transition-colors ${
+            showWeatherOverlay 
+              ? 'bg-accent text-accent-foreground' 
+              : 'bg-card/90 text-muted-foreground hover:text-foreground'
+          } border border-border`}
+        >
+          {showWeatherOverlay ? '🌧️ WEATHER ON' : '🌧️ WEATHER OFF'}
         </button>
       </div>
+
+      {/* Weather overlay info */}
+      {showWeatherOverlay && weatherSummary && (
+        <div className="absolute top-3 left-[140px] z-[500] bg-card/90 border border-border px-3 py-1.5">
+          <div className="font-mono text-[8px] text-muted-foreground tracking-wider">7-DAY WEATHER</div>
+          <div className="font-mono text-[10px] flex items-center gap-3">
+            <span className="text-accent">🌧️ {weatherSummary.rain7d}mm</span>
+            <span className="text-warning">🌡️ {weatherSummary.avgTemp}°C</span>
+          </div>
+        </div>
+      )}
 
       {/* Last Updated indicator */}
       <div className="absolute top-3 right-3 z-[500] bg-card/90 border border-border px-3 py-1.5">
