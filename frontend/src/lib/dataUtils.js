@@ -29,6 +29,17 @@ export const getWaterColor = (reliability) => {
   return 'hsl(25, 60%, 40%)';
 };
 
+// Conflict zone color based on risk level
+export const getConflictColor = (level) => {
+  switch (level) {
+    case 'Critical': return 'hsl(0, 85%, 50%)';
+    case 'High': return 'hsl(25, 95%, 53%)';
+    case 'Medium': return 'hsl(42, 82%, 53%)';
+    case 'Low': return 'hsl(152, 50%, 45%)';
+    default: return 'hsl(200, 25%, 45%)';
+  }
+};
+
 // Pressure level color
 export const getPressureColor = (pressure) => {
   switch (pressure) {
