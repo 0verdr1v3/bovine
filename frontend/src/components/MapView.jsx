@@ -287,40 +287,46 @@ const MigrationCorridor = ({ points }) => {
 // Map controller for flying to selected location
 const MapController = ({ selectedHerd, selectedConflictZone }) => {
   const map = useMap();
+  const lastHerdRef = React.useRef(null);
+  const lastZoneRef = React.useRef(null);
   
   useEffect(() => {
-    try {
-      if (selectedHerd && 
-          selectedHerd.lat !== undefined && selectedHerd.lat !== null &&
-          selectedHerd.lng !== undefined && selectedHerd.lng !== null &&
-          typeof selectedHerd.lat === 'number' && 
-          typeof selectedHerd.lng === 'number' &&
-          !isNaN(selectedHerd.lat) && 
-          !isNaN(selectedHerd.lng) &&
-          selectedHerd.lat >= -90 && selectedHerd.lat <= 90 &&
-          selectedHerd.lng >= -180 && selectedHerd.lng <= 180) {
-        map.flyTo([selectedHerd.lat, selectedHerd.lng], 8, { duration: 0.8 });
+    // Only fly if we have a new valid herd selection
+    if (selectedHerd && selectedHerd !== lastHerdRef.current) {
+      const lat = parseFloat(selectedHerd.lat);
+      const lng = parseFloat(selectedHerd.lng);
+      
+      if (!isNaN(lat) && !isNaN(lng) && 
+          lat >= -90 && lat <= 90 && 
+          lng >= -180 && lng <= 180 &&
+          isFinite(lat) && isFinite(lng)) {
+        lastHerdRef.current = selectedHerd;
+        try {
+          map.setView([lat, lng], 8, { animate: true, duration: 0.8 });
+        } catch (e) {
+          console.warn('Map setView error:', e);
+        }
       }
-    } catch (e) {
-      console.warn('Map flyTo error for herd:', e);
     }
   }, [selectedHerd, map]);
 
   useEffect(() => {
-    try {
-      if (selectedConflictZone && 
-          selectedConflictZone.lat !== undefined && selectedConflictZone.lat !== null &&
-          selectedConflictZone.lng !== undefined && selectedConflictZone.lng !== null &&
-          typeof selectedConflictZone.lat === 'number' && 
-          typeof selectedConflictZone.lng === 'number' &&
-          !isNaN(selectedConflictZone.lat) && 
-          !isNaN(selectedConflictZone.lng) &&
-          selectedConflictZone.lat >= -90 && selectedConflictZone.lat <= 90 &&
-          selectedConflictZone.lng >= -180 && selectedConflictZone.lng <= 180) {
-        map.flyTo([selectedConflictZone.lat, selectedConflictZone.lng], 8, { duration: 0.8 });
+    // Only fly if we have a new valid conflict zone selection
+    if (selectedConflictZone && selectedConflictZone !== lastZoneRef.current) {
+      const lat = parseFloat(selectedConflictZone.lat);
+      const lng = parseFloat(selectedConflictZone.lng);
+      
+      if (!isNaN(lat) && !isNaN(lng) && 
+          lat >= -90 && lat <= 90 && 
+          lng >= -180 && lng <= 180 &&
+          isFinite(lat) && isFinite(lng)) {
+        lastZoneRef.current = selectedConflictZone;
+        try {
+          map.setView([lat, lng], 8, { animate: true, duration: 0.8 });
+        } catch (e) {
+          console.warn('Map setView error:', e);
+        }
       }
-    } catch (e) {
-      console.warn('Map flyTo error for conflict zone:', e);
     }
   }, [selectedConflictZone, map]);
   
