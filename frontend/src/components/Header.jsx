@@ -111,6 +111,12 @@ export const Header = () => {
 
       {/* Right side - Mode toggle & Live badge */}
       <div className="flex items-center gap-3 lg:gap-4">
+        {/* Data freshness indicator */}
+        <div className="hidden lg:flex flex-col items-end">
+          <div className="font-mono text-[7px] text-muted-foreground tracking-wider">DATA AGE</div>
+          <div className="font-mono text-[10px] text-success">{getDataAge()}</div>
+        </div>
+
         {/* Simple Mode Toggle */}
         <TooltipProvider>
           <Tooltip>
