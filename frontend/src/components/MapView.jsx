@@ -19,14 +19,17 @@ const SOUTH_SUDAN_CENTER = [7.5, 30.5];
 
 // Custom herd marker component
 const HerdMarker = ({ herd, isSelected, onClick }) => {
-  // Validate herd coordinates before rendering
-  if (!herd || typeof herd.lat !== 'number' || typeof herd.lng !== 'number' ||
-      isNaN(herd.lat) || isNaN(herd.lng)) {
+  // Validate herd coordinates - must have valid numbers
+  const lat = parseFloat(herd?.lat);
+  const lng = parseFloat(herd?.lng);
+  
+  if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
+    console.warn('Invalid herd coordinates:', herd);
     return null;
   }
 
-  const ndviColor = getNdviColor(herd.ndvi);
-  const markerClass = herd.ndvi > 0.5 ? 'hm-green' : herd.ndvi > 0.38 ? 'hm-gold' : 'hm-blue';
+  const ndviColor = getNdviColor(herd.ndvi || 0);
+  const markerClass = (herd.ndvi || 0) > 0.5 ? 'hm-green' : (herd.ndvi || 0) > 0.38 ? 'hm-gold' : 'hm-blue';
   
   const icon = L.divIcon({
     className: '',
@@ -55,17 +58,18 @@ const HerdMarker = ({ herd, isSelected, onClick }) => {
   });
 
   const handleClick = () => {
-    // Pass a clean copy of the herd with validated coordinates
-    onClick({
+    // Create a clean herd object with guaranteed valid coordinates
+    const cleanHerd = {
       ...herd,
-      lat: Number(herd.lat),
-      lng: Number(herd.lng)
-    });
+      lat: lat,
+      lng: lng
+    };
+    onClick(cleanHerd);
   };
 
   return (
     <Marker 
-      position={[Number(herd.lat), Number(herd.lng)]} 
+      position={[lat, lng]} 
       icon={icon}
       eventHandlers={{ click: handleClick }}
     >
@@ -80,7 +84,7 @@ const HerdMarker = ({ herd, isSelected, onClick }) => {
           </div>
           <div className="flex justify-between gap-4">
             <span className="text-muted-foreground">Cattle:</span>
-            <span>~{formatNumber(herd.heads)}</span>
+            <span>~{formatNumber(herd.heads || 0)}</span>
           </div>
           <div className="flex justify-between gap-4">
             <span className="text-muted-foreground">Ethnicity:</span>
@@ -96,7 +100,7 @@ const HerdMarker = ({ herd, isSelected, onClick }) => {
           </div>
           <div className="flex justify-between gap-4">
             <span className="text-muted-foreground">NDVI:</span>
-            <span style={{ color: ndviColor }}>{herd.ndvi.toFixed(2)} — {getNdviLabel(herd.ndvi)}</span>
+            <span style={{ color: ndviColor }}>{(herd.ndvi || 0).toFixed(2)} — {getNdviLabel(herd.ndvi || 0)}</span>
           </div>
         </div>
         <div className="mt-2 pt-2 border-t border-border text-[9px] text-muted-foreground">
