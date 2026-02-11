@@ -574,6 +574,11 @@ export const MapView = () => {
             onClick={setSelectedHerd}
           />
         ))}
+
+        {/* Fire Hotspots (NASA FIRMS) */}
+        {layers.fires && fires && fires.map((fire, i) => (
+          <FireMarker key={`fire-${i}`} fire={fire} />
+        ))}
         
         {/* Coordinates display */}
         <CoordinatesDisplay />
