@@ -397,6 +397,49 @@ const MapLegend = () => {
   );
 };
 
+// Fire marker component (NASA FIRMS)
+const FireMarker = ({ fire }) => {
+  if (!fire.lat || !fire.lng) return null;
+  
+  return (
+    <CircleMarker
+      center={[fire.lat, fire.lng]}
+      radius={4}
+      pathOptions={{
+        color: '#ff4500',
+        fillColor: '#ff6600',
+        fillOpacity: 0.8,
+        weight: 1,
+      }}
+    >
+      <Popup>
+        <div className="font-display text-sm font-bold text-orange-500 mb-2">
+          🔥 Fire Hotspot
+        </div>
+        <div className="space-y-1 text-[10px]">
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Date:</span>
+            <span>{fire.acq_date || 'Recent'}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Confidence:</span>
+            <span>{fire.confidence}</span>
+          </div>
+          {fire.brightness && (
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Brightness:</span>
+              <span>{fire.brightness.toFixed(1)}K</span>
+            </div>
+          )}
+        </div>
+        <div className="mt-2 pt-2 border-t border-border text-[9px] text-muted-foreground">
+          Source: NASA FIRMS VIIRS
+        </div>
+      </Popup>
+    </CircleMarker>
+  );
+};
+
 // Main Map Component
 export const MapView = () => {
   const { 
@@ -405,6 +448,7 @@ export const MapView = () => {
     ndviZones, 
     corridors, 
     conflictZones,
+    fires,
     selectedHerd, 
     setSelectedHerd, 
     selectedConflictZone,
