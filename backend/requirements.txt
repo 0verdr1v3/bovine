@@ -15,6 +15,7 @@ click==8.3.1
 cryptography==46.0.4
 distro==1.9.0
 dnspython==2.8.0
+earthengine-api==1.7.13
 ecdsa==0.19.1
 email-validator==2.3.0
 emergentintegrations==0.1.0
@@ -29,8 +30,13 @@ google-api-core==2.29.0
 google-api-python-client==2.189.0
 google-auth==2.49.0.dev0
 google-auth-httplib2==0.3.0
+google-auth-oauthlib==1.2.4
+google-cloud-core==2.5.0
+google-cloud-storage==3.9.0
+google-crc32c==1.8.0
 google-genai==1.62.0
 google-generativeai==0.8.6
+google-resumable-media==2.8.0
 googleapis-common-protos==1.72.0
 grpcio==1.76.0
 grpcio-status==1.71.2
