@@ -203,6 +203,8 @@ const HerdDetailTab = () => {
   const waterColor = selectedHerd.water_days <= 2 ? 'hsl(42, 82%, 53%)' : 
                      selectedHerd.water_days <= 5 ? 'hsl(var(--foreground))' : 'hsl(152, 65%, 45%)';
   const pressureScore = calculatePressureScore(selectedHerd);
+  const evidence = selectedHerd.evidence;
+  const confidencePercent = evidence?.confidence ? (evidence.confidence * 100).toFixed(0) : 'N/A';
 
   return (
     <ScrollArea className="h-full">
@@ -233,7 +235,7 @@ const HerdDetailTab = () => {
           </div>
           
           {/* Water Progress */}
-          <div>
+          <div className="mb-3">
             <div className="flex justify-between font-mono text-[9px] text-muted-foreground mb-1">
               <span>WATER ACCESS URGENCY</span>
               <span>{selectedHerd.water_days} days</span>
@@ -248,6 +250,22 @@ const HerdDetailTab = () => {
               />
             </div>
           </div>
+
+          {/* Detection Confidence */}
+          {evidence && (
+            <div>
+              <div className="flex justify-between font-mono text-[9px] text-muted-foreground mb-1">
+                <span>DETECTION CONFIDENCE</span>
+                <span className="text-success">{confidencePercent}%</span>
+              </div>
+              <div className="h-1.5 bg-card border border-border overflow-hidden">
+                <div 
+                  className="h-full transition-all duration-500 bg-success"
+                  style={{ width: `${evidence.confidence * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* Details Table */}
@@ -283,6 +301,55 @@ const HerdDetailTab = () => {
         >
           {selectedHerd.note}
         </div>
+
+        {/* Evidence Section - WHY WE KNOW THE CATTLE ARE HERE */}
+        {evidence && (
+          <div className="space-y-3">
+            {/* Primary Indicators */}
+            <div className="bg-success/5 border border-success/20 p-3">
+              <div className="tactical-label mb-2 text-success flex items-center gap-2">
+                <Satellite className="h-3 w-3" />
+                PRIMARY DETECTION INDICATORS
+              </div>
+              <ul className="space-y-1.5">
+                {evidence.primary_indicators?.map((indicator, i) => (
+                  <li key={i} className="text-[10px] text-foreground leading-relaxed flex gap-2">
+                    <span className="text-success">•</span>
+                    {indicator}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Supporting Data */}
+            <div className="bg-accent/5 border border-accent/20 p-3">
+              <div className="tactical-label mb-2 text-accent flex items-center gap-2">
+                <Database className="h-3 w-3" />
+                SUPPORTING DATA SOURCES
+              </div>
+              <ul className="space-y-1.5">
+                {evidence.supporting_data?.map((data, i) => (
+                  <li key={i} className="text-[10px] text-foreground leading-relaxed flex gap-2">
+                    <span className="text-accent">•</span>
+                    {data}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Verification Info */}
+            <div className="bg-muted border border-border p-2.5 space-y-1">
+              <div className="flex justify-between text-[9px]">
+                <span className="text-muted-foreground">Last Verified:</span>
+                <span className="text-foreground font-mono">{evidence.last_verification}</span>
+              </div>
+              <div className="flex justify-between text-[9px]">
+                <span className="text-muted-foreground">Method:</span>
+                <span className="text-foreground">{evidence.verification_method}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </ScrollArea>
   );
