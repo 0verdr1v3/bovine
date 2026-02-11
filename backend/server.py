@@ -715,8 +715,8 @@ Be analytical, direct, and brief. Use bullet points. Quantify predictions where 
         # Set the model - provider is "anthropic" for Claude
         llm = llm.with_model("anthropic", "claude-sonnet-4-20250514")
         
-        # Send the message
-        response_text = await llm.send_message(UserMessage(content=request.query))
+        # Send the message - UserMessage takes 'text' not 'content'
+        response_text = await llm.send_message(UserMessage(text=request.query))
 
         await db.ai_history.insert_one({
             "id": str(uuid.uuid4()),
