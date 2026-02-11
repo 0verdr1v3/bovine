@@ -21,7 +21,9 @@ import {
   Users,
   Calendar,
   MapPin,
-  Crosshair
+  Crosshair,
+  Satellite,
+  Database
 } from 'lucide-react';
 
 // AI Quick Questions - Updated with conflict focus
