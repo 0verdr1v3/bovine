@@ -324,14 +324,18 @@ CRITICAL: Cattle movement predicts violence, displacement, and famine. The UN ca
 
 Be analytical, direct, and brief. Use bullet points. Quantify predictions where possible. Think in systems and second/third-order effects."""
 
-        messages = [LlmMessage(role="user", content=request.query)]
-        
-        response = await chat(
+        # Use LlmChat for AI analysis
+        llm = LlmChat(
             api_key=os.environ.get("EMERGENT_LLM_KEY", ""),
-            messages=messages,
-            system_message=system_prompt,
             model="claude-sonnet-4-20250514"
         )
+        
+        response = await llm.chat(
+            messages=[UserMessage(content=request.query)],
+            system_message=system_prompt
+        )
+        
+        response_text = response.content if hasattr(response, 'content') else str(response)
         
         # Store analysis in history
         await db.ai_history.insert_one({
