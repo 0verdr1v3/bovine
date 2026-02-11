@@ -180,7 +180,8 @@ const MapController = ({ selectedHerd }) => {
   const map = useMap();
   
   useEffect(() => {
-    if (selectedHerd) {
+    if (selectedHerd && selectedHerd.lat && selectedHerd.lng && 
+        !isNaN(selectedHerd.lat) && !isNaN(selectedHerd.lng)) {
       map.flyTo([selectedHerd.lat, selectedHerd.lng], 8, { duration: 0.8 });
     }
   }, [selectedHerd, map]);
