@@ -19,6 +19,12 @@ const SOUTH_SUDAN_CENTER = [7.5, 30.5];
 
 // Custom herd marker component
 const HerdMarker = ({ herd, isSelected, onClick }) => {
+  // Validate herd coordinates before rendering
+  if (!herd || typeof herd.lat !== 'number' || typeof herd.lng !== 'number' ||
+      isNaN(herd.lat) || isNaN(herd.lng)) {
+    return null;
+  }
+
   const ndviColor = getNdviColor(herd.ndvi);
   const markerClass = herd.ndvi > 0.5 ? 'hm-green' : herd.ndvi > 0.38 ? 'hm-gold' : 'hm-blue';
   
@@ -48,11 +54,20 @@ const HerdMarker = ({ herd, isSelected, onClick }) => {
     iconAnchor: [16, 16],
   });
 
+  const handleClick = () => {
+    // Pass a clean copy of the herd with validated coordinates
+    onClick({
+      ...herd,
+      lat: Number(herd.lat),
+      lng: Number(herd.lng)
+    });
+  };
+
   return (
     <Marker 
-      position={[herd.lat, herd.lng]} 
+      position={[Number(herd.lat), Number(herd.lng)]} 
       icon={icon}
-      eventHandlers={{ click: onClick }}
+      eventHandlers={{ click: handleClick }}
     >
       <Popup>
         <div className="font-display text-base font-bold text-primary mb-2">
