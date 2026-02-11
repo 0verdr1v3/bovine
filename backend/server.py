@@ -341,11 +341,11 @@ Be analytical, direct, and brief. Use bullet points. Quantify predictions where 
         await db.ai_history.insert_one({
             "id": str(uuid.uuid4()),
             "query": request.query,
-            "response": response,
+            "response": response_text,
             "timestamp": datetime.now(timezone.utc).isoformat()
         })
         
-        return {"response": response, "timestamp": datetime.now(timezone.utc).isoformat()}
+        return {"response": response_text, "timestamp": datetime.now(timezone.utc).isoformat()}
         
     except Exception as e:
         logger.error(f"AI Analysis error: {e}")
