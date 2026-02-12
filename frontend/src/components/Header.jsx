@@ -2,12 +2,13 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useData } from '../context/DataContext';
 import { formatNumber } from '../lib/dataUtils';
-import { Satellite, Droplets, Activity, Radar, Sun, Moon, AlertTriangle, Shield } from 'lucide-react';
+import { Satellite, Droplets, Activity, Radar, Sun, Moon, AlertTriangle, Shield, Flame, Clock } from 'lucide-react';
 import { Switch } from './ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { Badge } from './ui/badge';
 
 export const Header = () => {
-  const { stats, lastUpdated, isSimpleMode, toggleSimpleMode, isLoading, conflictZones } = useData();
+  const { stats, lastUpdated, isSimpleMode, toggleSimpleMode, isLoading, conflictZones, fires } = useData();
   const [currentTime, setCurrentTime] = React.useState(new Date());
 
   React.useEffect(() => {
@@ -16,8 +17,9 @@ export const Header = () => {
   }, []);
 
   // Count critical/high zones
-  const criticalCount = conflictZones?.filter(z => z.real_time_level === 'Critical').length || 0;
-  const highCount = conflictZones?.filter(z => z.real_time_level === 'High').length || 0;
+  const criticalCount = conflictZones?.filter(z => z.real_time_level === 'Critical' || z.risk_level === 'Critical').length || 0;
+  const highCount = conflictZones?.filter(z => z.real_time_level === 'High' || z.risk_level === 'High').length || 0;
+  const fireCount = fires?.length || 0;
 
   // Format data age
   const getDataAge = () => {
@@ -36,36 +38,42 @@ export const Header = () => {
     { 
       label: 'HERDS', 
       value: stats?.total_herds || '—',
+      status: 'ESTIMATED',
       icon: Radar,
       color: 'text-primary'
     },
     { 
-      label: 'EST. CATTLE', 
+      label: 'CATTLE', 
       value: stats?.total_cattle ? `~${Math.round(stats.total_cattle / 1000)}K` : '—',
+      status: 'ESTIMATED',
       icon: Activity,
       color: 'text-primary'
     },
     { 
-      label: '7-DAY RAIN', 
+      label: 'RAIN 7D', 
       value: stats?.rain_7day_mm !== undefined ? `${stats.rain_7day_mm}mm` : '—',
+      status: 'LIVE',
       icon: Droplets,
       color: 'text-accent'
     },
     { 
-      label: 'AVG NDVI', 
+      label: 'NDVI', 
       value: stats?.avg_ndvi?.toFixed(2) || '—',
+      status: stats?.gee_status === 'CONNECTED' ? 'LIVE' : 'HIST',
       icon: Satellite,
       color: 'text-success'
     },
     { 
       label: 'CRITICAL', 
       value: criticalCount,
+      status: 'HIST',
       icon: AlertTriangle,
       color: criticalCount > 0 ? 'text-destructive' : 'text-muted-foreground'
     },
     { 
-      label: 'HIGH RISK', 
+      label: 'HIGH', 
       value: highCount,
+      status: 'HIST',
       icon: Shield,
       color: highCount > 0 ? 'text-warning' : 'text-muted-foreground'
     },
