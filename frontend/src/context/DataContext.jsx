@@ -49,6 +49,9 @@ export const DataProvider = ({ children }) => {
 
   // Simple mode toggle
   const [isSimpleMode, setIsSimpleMode] = useState(false);
+  
+  // Right panel active tab
+  const [rightPanelTab, setRightPanelTab] = useState('ai');
 
   const toggleLayer = useCallback((layerId) => {
     setLayers(prev => ({ ...prev, [layerId]: !prev[layerId] }));
@@ -58,7 +61,7 @@ export const DataProvider = ({ children }) => {
     setIsSimpleMode(prev => !prev);
   }, []);
 
-  // Safe select herd function with validation
+  // Safe select herd function with validation - also switches to HERD tab
   const selectHerd = useCallback((herd) => {
     if (herd && 
         herd.lat !== undefined && herd.lat !== null &&
@@ -69,12 +72,13 @@ export const DataProvider = ({ children }) => {
         herd.lng >= -180 && herd.lng <= 180) {
       setSelectedHerd(herd);
       setSelectedConflictZone(null);
+      setRightPanelTab('herd'); // Auto-switch to HERD tab
     } else {
       console.warn('Invalid herd coordinates:', herd);
     }
   }, []);
 
-  // Safe select conflict zone function
+  // Safe select conflict zone function - also switches to ZONE tab
   const selectConflictZone = useCallback((zone) => {
     if (zone && 
         zone.lat !== undefined && zone.lat !== null &&
@@ -85,6 +89,7 @@ export const DataProvider = ({ children }) => {
         zone.lng >= -180 && zone.lng <= 180) {
       setSelectedConflictZone(zone);
       setSelectedHerd(null);
+      setRightPanelTab('conflict'); // Auto-switch to ZONE tab
     } else {
       console.warn('Invalid conflict zone coordinates:', zone);
     }
