@@ -548,6 +548,15 @@ export const MapView = () => {
           />
         )}
         
+        {/* Cloud cover overlay - OpenWeatherMap */}
+        {showRadarOverlay && (
+          <TileLayer
+            url="https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=9de243494c0b295cca9337e1e96b00e2"
+            opacity={0.6}
+            maxZoom={18}
+          />
+        )}
+        
         {/* Map controller */}
         <MapController selectedHerd={selectedHerd} selectedConflictZone={selectedConflictZone} />
         
