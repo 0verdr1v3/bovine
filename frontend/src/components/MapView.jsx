@@ -615,11 +615,21 @@ export const MapView = () => {
               : 'bg-card/90 text-muted-foreground hover:text-foreground'
           } border border-border`}
         >
-          {showWeatherOverlay ? '🌧️ WEATHER ON' : '🌧️ WEATHER OFF'}
+          {showWeatherOverlay ? '🌧️ PRECIP ON' : '🌧️ PRECIP OFF'}
+        </button>
+        <button
+          onClick={() => setShowRadarOverlay(!showRadarOverlay)}
+          className={`px-3 py-1.5 font-mono text-[9px] tracking-wider transition-colors ${
+            showRadarOverlay 
+              ? 'bg-primary text-primary-foreground' 
+              : 'bg-card/90 text-muted-foreground hover:text-foreground'
+          } border border-border`}
+        >
+          {showRadarOverlay ? '☁️ CLOUDS ON' : '☁️ CLOUDS OFF'}
         </button>
         {fires && fires.length > 0 && (
-          <div className="px-3 py-1.5 font-mono text-[9px] tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">
-            🔥 {fires.length} FIRES
+          <div className="px-3 py-1.5 font-mono text-[9px] tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30 animate-pulse">
+            🔥 {fires.length} FIRES LIVE
           </div>
         )}
       </div>
