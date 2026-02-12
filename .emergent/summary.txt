@@ -1,168 +1,179 @@
 <analysis>**original_problem_statement:**
-The user wants to build a web application called BOVINE Cattle Movement Intelligence for the United Nations. The application's purpose is to track and predict cattle movement in South Sudan to help mitigate conflict, resource scarcity, and humanitarian risks. The system should use AI, mapping, and predictive modeling based on open-source satellite imagery and geospatial data.
+The user wants to build a web application called BOVINE Cattle Movement Intelligence for the United Nations. The application's purpose is to track and predict cattle movement in South Sudan to help mitigate conflict, resource scarcity, and humanitarian risks. The system should use AI, mapping, and predictive modeling based on open-source satellite imagery and geospatial data. A key user requirement is that the application must use real, verifiable data and avoid simulations wherever possible, presenting itself as a Bloomberg Terminal for humanitarian intelligence.
 
 **PRODUCT REQUIREMENTS:**
-- **UI/UX:** A dark, tactile, and modern interface, with an optional simple mode. The design should be mobile-responsive.
+- **UI/UX:** A dark, tactile, Bloomberg-style interface, mobile-responsive, with data-rich displays.
 - **Data & Features:**
-    - **Live Data:** The application must use real-time or near-real-time data wherever possible.
+    - **Live & Real Data:** The application must integrate a wide array of real-time or near-real-time data sources. All simulated data must be replaced.
     - **Map:** An interactive map must be the central component, displaying:
-        - Cattle herd locations (estimated or real).
+        - Cattle herd locations (estimated from real data).
         - Conflict zones with risk levels.
-        - A live weather overlay.
+        - Multiple weather overlays (live weather, radar, clouds).
         - High-definition satellite imagery as a base layer.
-    - **Data Layers:** Toggleable layers for migration corridors, water sources, and vegetation index (NDVI).
-    - **Evidence:** For each tracked herd, the app must show the data/evidence used to determine its location.
+    - **Data Layers:** Toggleable layers for migration corridors, water sources, vegetation index (NDVI), soil moisture, fire hotspots, flood risk, and nighttime lights.
+    - **Evidence & Estimation:** For each data point (especially estimated herds), the app must clearly indicate its source, accuracy, and whether it's LIVE, CACHED, ESTIMATED, or HISTORICAL. The estimation methodology must be explainable.
     - **AI Analysis:** An AI-powered chat to ask questions about herd movements, conflict risks, and environmental factors.
-    - **News Feed:** A live feed of local news from South Sudan.
-    - **Historical Data:** Store and retrieve historical data (e.g., AI analyses) using MongoDB.
-- **Technology:** The user specified using the Emergent LLM for the AI component.
+    - **News & Alerts:** Live feeds of local news and global disaster alerts.
+    - **Historical Data:** Store and retrieve historical data for analysis and backtesting.
+- **Technology:**
+    - Frontend: React
+    - Backend: FastAPI
+    - AI: Emergent LLM
+    - Data: Google Earth Engine, various public APIs.
+    - Database: MongoDB for caching and history.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack prototype has been developed using React for the frontend and FastAPI for the backend.
-- **Frontend:** A dashboard-style interface with a central Leaflet map. It includes a header with live stats, side panels for lists (herds, conflicts, news) and details (AI, herd evidence), and map layer controls. The UI is styled with TailwindCSS using a custom dark theme.
-- **Backend:** A FastAPI server provides API endpoints that serve simulated data for herds, conflict zones, and news. It features a working AI analysis endpoint () connected to the Emergent LLM. The weather data is live, fetched from the Open-Meteo API.
-- **Database:** MongoDB is configured to store the history of AI analysis queries.
-- **Data Simulation:** Most data points, especially herd locations and counts, are currently simulated based on realistic but static data. The user is aware of this distinction.
+A full-stack web application with a Bloomberg Terminal style UI. The backend has been massively overhauled to integrate ~13 real data sources, replacing the initial simulated data. It now uses Google Earth Engine (GEE) for live NDVI, soil moisture, and rainfall data. Other live/cached sources include ACLED (conflicts), NASA FIRMS (fires), RainViewer (weather radar), and GDACS (disasters). The frontend displays these data layers on a Leaflet map and in various panels, with indicators for data status (LIVE, ESTIMATED, CACHED). The estimation logic for herds, while based on real data points (FAO stats, NDVI, water sources), is still a black box that the user wants explained. A comprehensive  and  have been created.
 
 **Last working item**:
-The agent had just implemented the user's request to show the evidence behind each herd's location and to default the map to a satellite view with a weather overlay. Following this, the user asked if the data was real. The agent provided a detailed breakdown of what is real (weather, historical conflict locations) versus what is simulated (herd positions) and asked the user for direction on which real data source to integrate next.
-    - Last item agent was working: Clarifying the distinction between real and simulated data and awaiting user feedback on integrating live data sources (e.g., Sentinel Hub for NDVI, Sentinel-5P for methane).
-    - Status: USER VERIFICATION PENDING
-    - Agent Testing Done: Y
+The user requested that when a herd is clicked in the list on the left panel, the right panel should automatically open and switch to the HERD details tab. The agent began implementing this by modifying the  component to handle the click event.
+    - Last item agent was working: Implementing the auto-opening of the herd details tab upon clicking a herd in the list.
+    - Status: IN PROGRESS
+    - Agent Testing Done: N
     - Which testing method agent to use? Frontend testing agent
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  Issue 1:  HERD tab shows AI content instead of herd details (P1)
-  
-  Issues Detail:
-  - Issue 1: 
-     - Attempted fixes: The agent observed this behavior once via screenshot but did not get a chance to debug it. The right-side panel, which should show herd-specific details when the HERD tab is active, was incorrectly displaying the AI tab's content.
-     - Next debug checklist: 
-        1. Examine  to verify the state management for active tabs.
-        2. Check the  handlers for the tabs to ensure they correctly set the active tab state.
-        3. Ensure the conditional rendering logic correctly displays the content for the  tab.
-     - Why fix this issue and what will be achieved with the fix? This is critical for fulfilling the user's request to see the evidence and detailed data for each selected herd.
-     - Status:  NOT STARTED
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on other issue: None
+  - None.
 
 **In progress Task List**:
-  - None.
+  Task 1:  Automatically open the 'HERD' tab in the Right Panel when a herd is clicked in the Left Panel list (P0)
+
+ Task Detail:
+  - Task 1: 
+     - Where to resume: The agent has modified . The next step is to update  to create and expose a function that can set the active tab state for the . Then,  must be modified to consume this new state/function, and  must be updated to call it on herd click.
+     - What will be achieved with this? This will improve the user experience by making the interface more intuitive and reducing the number of clicks required to view herd details.
+     - Status: IN PROGRESS
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on something: None
 
 **Upcoming and Future Tasks**
  Upcoming Tasks:
-- **Task 1: Integrate Real Data Sources (P0):** This is the most critical next step, pending the user's decision.
-    - **Option A:** Integrate Sentinel-2 for real NDVI feeds (requires a user-provided API key).
-    - **Option B:** Integrate Sentinel-5P for live methane detection (free).
-    - **Where to resume:** Create new data fetching functions in the backend () and update the frontend state management () to consume and display this live data.
+- **Task 1: Explain Estimation Algorithm & Add Data Source Details (P0):** The user wants a detailed explanation of how herd locations are estimated. This involves:
+    - Creating a clear, step-by-step text explanation for the user.
+    - Integrating this explanation into the UI, potentially via tooltips, info icons, or a dedicated section in the DATA tab. For each data point (e.g., NDVI, herd size), an explanation of its source and role in the estimation should be available.
+- **Task 2: Improve Data Source Accuracy Display (P1):** Add explicit accuracy levels or confidence scores for each data source and estimation, as requested by the user.
 
  Future Tasks:
-- **Task 2: Implement Simple Mode (P1):** A user-requested feature to provide a less complex UI view.
-    - **Where to resume:** Add a UI toggle and use React state to conditionally apply styles or render a different component layout.
-- **Task 3: Backtest Predictive Models (P2):** Validate the accuracy of movement predictions using historical data.
-    - **Where to resume:** Create a new script or backend service to run simulations against data stored in MongoDB.
-- **Task 4: Implement High-Def Satellite Capture (P2):** A feature to request the most recent high-resolution satellite image for a specific area.
-    - **Where to resume:** This requires research and integration with a paid satellite imagery provider's API (e.g., Planet, Maxar).
+- **Task 3: Implement Simple Mode (P2):** A user-requested feature to provide a less complex UI view.
+- **Task 4: Backtest Predictive Models (P2):** Validate the accuracy of movement predictions using the integrated historical data.
+- **Task 5: Implement High-Def Satellite Capture (P3):** A feature to request the most recent high-resolution satellite image for a specific area, likely requiring a paid API.
+- **Task 6: IoT Collar Integration (P3):** Integrate real-time GPS tracking from IoT collars on cattle for ground-truth data.
 
 **Completed work in this session**
-- **Architecture:** Established the React/FastAPI project structure from the user's initial HTML concept.
-- **Design System:** Implemented a dark, tactical design system in .
-- **Core UI:** Built all major UI components: , , , and .
-- **Map Implementation:** Integrated Leaflet.js with multiple data layers: herds, conflict zones, water sources, migration corridors, and toggleable base layers (dark, satellite) and overlays (weather).
-- **Backend API:** Developed a comprehensive API in  serving both simulated data and live weather data.
-- **AI Integration:** Successfully integrated the Emergent LLM for the AI analysis feature after extensive debugging.
-- **Conflict & News:** Added features to display conflict zones and a simulated news feed.
-- **Herd Evidence:** Implemented the UI and backend logic to display the reasoning/data sources for each estimated herd location.
+- **Massive Real Data Integration:** Replaced nearly all simulated data with ~13 real data sources.
+- **Google Earth Engine Integration:** Successfully integrated GEE for live data on NDVI, soil moisture (SMAP), rainfall (CHIRPS), and nighttime lights (VIIRS).
+- **Additional Data Sources:** Integrated live/cached data from ACLED (conflicts), NASA FIRMS (fires), RainViewer (weather radar), GDACS (disasters), Open-Meteo, and ReliefWeb.
+- **Backend Batch Processing:** Implemented a background scheduler () to periodically fetch and cache data from all sources, improving performance and managing API rate limits.
+- **UI Bloomberg Enhancements:**
+    - Added LIVE, CACHED, ESTIMATED tags to data points in the UI.
+    - Added multiple weather overlay options (Clouds, Radar).
+    - Expanded the Data Sources panel to show the status of all integrated sources.
+- **Documentation:** Created comprehensive  with setup instructions and a  explaining the architecture, data flow, and stack.
+- **Bug Fix:** Resolved the issue where the HERD tab was not displaying its content correctly.
 
 **Earlier issues found/mentioned but not fixed**
-   - **Issue 1: HERD tab displaying incorrect content.**
-     - **Debug checklist:** As mentioned in the All Pending/In progress Issue list.
-     - **Why to solve this issue and what will be achieved with this?** The fix will enable users to view detailed information and evidence for each herd, a key requirement.
-     - **Should Test frontend/backend/both after fix:** Frontend.
-     - **Is recurring issue?** Y.
+   - None. The primary issue from the last fork regarding the HERD tab was resolved.
 
 **Known issue recurrence from previous fork**
-  - **Issue recurrence in previous fork:** Two major issues were highly recurrent during this session:
-    1.  **AI Integration ():** The agent struggled with the correct API signature, leading to multiple failed attempts. The issues involved incorrect class instantiation, method calls, and parameter names.
-    2.  **Map  Error:** A persistent  error occurred when clicking map items, causing the UI to crash. This was due to invalid coordinates being passed to the animation function.
-  - **Recurrence count:** Both issues recurred 3+ times.
-  - **Status:** RESOLVED. However, the next agent must be extremely cautious when modifying the AI endpoint () or the map interaction logic in  and .
+  - **Issue recurrence in previous fork:** AI Integration () and Map  errors.
+  - **Recurrence count:** 3+ in the previous session.
+  - **Status:** RESOLVED. These issues did not recur in the current session. The agent successfully modified related components without reintroducing the bugs.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 - **Frontend:** React, Tailwind CSS, Leaflet.js, Framer Motion, Axios
-- **Backend:** Python, FastAPI
-- **Database:** MongoDB
-- **Architecture:** Single Page Application (SPA) with a RESTful API backend.
-- **State Management:** React Context API
+- **Backend:** Python, FastAPI, APScheduler (for background tasks)
+- **Database:** MongoDB (used as a cache for API data and for storing analysis history)
+- **GIS/Remote Sensing:** Google Earth Engine (GEE), GeoJSON
+- **Data APIs:** Open-Meteo, ACLED, NASA FIRMS, RainViewer, GDACS, ReliefWeb
+- **Architecture:** SPA with a RESTful API backend featuring a background job scheduler for data ingestion.
 
 **key DB schema**
   - **analysis_history**: 
+  - **api_cache**:  (Inferred schema for caching various API responses like weather, conflicts, etc.)
+  - **gee_cache**:  (Inferred schema for GEE data)
 
 **changes in tech stack**
-  - The project was built from the ground up on a React/FastAPI stack, based on the user's initial plain HTML prototype.
+  - **Google Earth Engine (earthengine-api):** Added for real-time geospatial data processing.
+  - **APScheduler:** Added to the backend to run periodic, batched data updates in the background.
 
 **All files of reference**
-- **/app/backend/server.py**: Contains all backend logic, API endpoints, and AI integration.
-- **/app/frontend/src/context/DataContext.jsx**: Manages all application state and API calls from the frontend.
-- **/app/frontend/src/components/MapView.jsx**: Core component for the Leaflet map and its interactive layers.
-- **/app/frontend/src/index.css**: Defines the application's entire visual identity and design system.
-- **/app/frontend/src/components/RightPanel.jsx**: Contains the logic for the AI, Herd Details, and other info tabs.
+- **/app/backend/server.py**: Heavily modified. Now contains all API endpoints, data fetching logic for 13 sources, Google Earth Engine integration, and the background scheduling task.
+- **/app/frontend/src/context/DataContext.jsx**: Manages state for all new data sources.
+- **/app/frontend/src/components/MapView.jsx**: Updated to include new data layers (fires, weather radar).
+- **/app/frontend/src/components/RightPanel.jsx**: Updated with new tabs and to correctly display data source information.
+- **/app/frontend/src/components/LeftPanel.jsx**: Modified to begin implementing the herd-click feature.
+- **/app/backend/gee_credentials.json**: New file containing the service account key for Google Earth Engine.
+- **/app/README.md**: New file with setup and deployment instructions.
+- **/app/TECHNICAL_BREAKDOWN.md**: New file with a detailed system overview.
 
 **Areas that need refactoring**:
-- The **** component is becoming monolithic. It handles rendering for all map layers (herds, conflicts, corridors, etc.) and user interactions. It should be broken down into smaller, specialized components (e.g., , ).
-- The AI integration logic in **** was developed through trial and error. It could be encapsulated into a dedicated service class to improve robustness and clarity.
+- ** is critically monolithic.** It has grown to over 1000 lines and handles API routing, data fetching from a dozen sources, GEE authentication/logic, and background scheduling. It MUST be broken down into a modular structure (e.g., a  directory with separate files for each source, a  directory for GEE logic, and a  module).
+- **** remains large and could be broken down into smaller components for each layer (, , ).
 
 **key api endpoints**
-- : Retrieves header statistics.
-- : Retrieves the list of simulated herds.
-- : Retrieves the list of conflict zones.
-- : Retrieves simulated news articles.
-- : Processes a user's natural language query and returns an AI-generated analysis.
+- : Main header stats, now includes live NDVI.
+- : Estimated herd data.
+- : Real conflict data from ACLED.
+- : Status of all 13 integrated sources.
+- : Live fire data from NASA FIRMS.
+- : Live data from GEE.
+- : Live data from GEE.
+- : Live data from GEE.
+- : Live data from GEE.
+- : AI analysis endpoint.
+- : Triggers the background data update manually.
 
 **Critical Info for New Agent**
-- **The app is a PROTOTYPE.** The user knows that key data like herd positions are simulated. The immediate priority is to integrate a real data source based on the user's choice.
-- **Be cautious with AI and Map code.** The AI integration () and the map's  function were major sources of bugs. Double-check any changes in  (related to ) and .
-- **Awaiting User Input:** The agent is blocked waiting for the user to decide which real data source (NDVI, methane, etc.) to integrate next. This should be the first action of the next agent.
+- **The user's top priority is understanding the estimation logic.** The app now has a wealth of real data, but the user needs to know exactly how that data is used to estimate herd locations and sizes. This is both a documentation and a UI task.
+- **The  file is fragile due to its size.** Refactoring it should be a high priority to ensure maintainability.
+- **The herd data is still ESTIMATED**, not tracked via GPS. This is a crucial distinction to maintain in all communication and UI labeling. The estimation is now *data-driven*, but it's not ground truth.
+- The testing agent call failed in the last session. The agent relied on extensive manual testing (curl, screenshots). A full run with the testing agent is recommended after the current UI task is complete.
 
 **documents and test reports created in this job**
-  - None.
+- **/app/README.md**
+- **/app/TECHNICAL_BREAKDOWN.md**
+- **/app/memory/PRD.md**
 
 **Last 10 User Messages and any pending HUMAN messages** 
- -  all the herds and stuff show inside this app is real data?: User asked about data authenticity. (Status: Answered, awaiting user feedback)
- -  so how do we know that the cow is there can you list a the reasons / data for each cattle, just give more info and lets switch to a sat map with a weather overlay: User requested herd evidence and map view changes. (Status: Completed)
- -  fix the errors and also add possible conflict zones...: User requested bug fixes and new features like conflict zones and news. (Status: Completed)
- -  use emergent llm, so i need it to work and actually be able to show LIVE REAL TIME...: User's initial detailed requirements for the project. (Status: In Progress)
+- User requested a detailed explanation of the estimation algorithm, data sources, accuracy, and for the UI to reflect this information clearly. (Status: In Progress)
+- User requested that clicking a herd in the list should automatically open the sidebar with the herd info tab. (Status: In Progress)
+- User requested a complete technical breakdown of the stack, data sources, and algorithms, with deployment instructions. (Status: Completed,  created)
+- User confirmed to add all possible free data sources and last updated counters for estimated data. (Status: Completed)
+- User asked if all data is real now and requested setup instructions and info on adding more data streams like weather radar. (Status: Answered, and new data streams were integrated)
+- User provided a Google Earth Engine service account key. (Status: Completed, key integrated)
 
 **Project Health Check:**
-- **Broken:**
-    - The HERD details tab in the right panel may not be displaying correctly.
+- **Broken:** None. The core functionality is working.
 - **Mocked:**
-    - Herd positions, cattle counts, and movement data are all simulated.
-    - The news feed uses static, simulated articles.
+    - **Herd Locations, Counts, and Movements:** These are **ESTIMATED** based on a combination of real data sources (NDVI, water, conflict, FAO stats). This is the most critical mocked element that the user wants full transparency on.
 
 **3rd Party Integrations**
-- **Anthropic Claude:** Powers the AI analysis feature — uses Emergent LLM Key.
-- **Open-Meteo API:** Provides live weather forecast data — requires no key.
-- **Leaflet.js & ESRI World Imagery:** Used for the interactive map display — requires no key.
-- **OpenWeatherMap:** Provides the weather overlay on the map — requires no key (seems to be using a free tier).
+- **Emergent LLM (Anthropic Claude)** — uses Emergent LLM Key.
+- **Google Earth Engine** — requires User-provided service account JSON.
+- **Open-Meteo API** (Weather) — requires no key.
+- **ACLED API** (Conflict Data) — requires no key (but registration is recommended).
+- **NASA FIRMS API** (Fires) — requires no key for standard use.
+- **RainViewer API** (Weather Radar) — requires no key.
+- **ReliefWeb API** (News) — requires no key.
+- **GDACS API** (Disasters) — requires no key.
+- **Leaflet.js & ESRI World Imagery** — requires no key.
+- **FAO, IGAD, OpenStreetMap:** Used as static/reference data sources.
 
 **Testing status**
-  - Testing agent used after significant changes: YES
+  - Testing agent used after significant changes: NO (The call failed, agent performed manual testing instead).
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
-  - Known regressions: The AI and Map  features have been historically unstable but were fixed in the last iteration.
+  - Known regressions: None from this session.
 
 **Credentials to test flow:**
-- None required from the user. The Emergent LLM key is automatically provisioned in the environment.
+- **Google Earth Engine:** The service account key is stored at . The backend is configured to use this file. No user action is needed.
 
 **What agent forgot to execute**
-- The simple mode UI feature requested by the user was not implemented.
-- A dedicated mobile-responsive pass was not performed.
-- The complex feature for requesting new high-definition satellite captures was not implemented.</analysis>
+- The agent has not yet provided the detailed, user-facing explanation of the herd estimation algorithm as requested.
+- The agent was in the middle of implementing the click herd to open tab UI feature when the session ended.</analysis>
