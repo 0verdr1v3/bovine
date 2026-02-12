@@ -785,11 +785,11 @@ const DataSourcesTab = () => {
 
 // Main Right Panel Component
 export const RightPanel = () => {
-  const [activeTab, setActiveTab] = useState('ai');
+  const { rightPanelTab, setRightPanelTab } = useData();
 
   return (
     <div className="h-full flex flex-col bg-card border-l border-border overflow-hidden">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+      <Tabs value={rightPanelTab} onValueChange={setRightPanelTab} className="flex-1 flex flex-col min-h-0">
         <TabsList className="w-full grid grid-cols-5 h-10 rounded-none border-b border-border bg-transparent">
           <TabsTrigger 
             value="ai" 

@@ -227,6 +227,8 @@ export const DataProvider = ({ children }) => {
     lastUpdated,
     fetchAllData,
     analyzeWithAI,
+    rightPanelTab,
+    setRightPanelTab,
   };
 
   return (
