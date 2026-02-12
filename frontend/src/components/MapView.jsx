@@ -464,11 +464,14 @@ export const MapView = () => {
     layers, 
     isSimpleMode,
     lastUpdated,
-    weather
+    weather,
+    stats
   } = useData();
 
-  const [satelliteMode, setSatelliteMode] = React.useState(true); // Default to satellite
-  const [showWeatherOverlay, setShowWeatherOverlay] = React.useState(true); // Weather overlay on by default
+  const [satelliteMode, setSatelliteMode] = React.useState(true);
+  const [showWeatherOverlay, setShowWeatherOverlay] = React.useState(true);
+  const [showRadarOverlay, setShowRadarOverlay] = React.useState(false);
+  const [weatherLayer, setWeatherLayer] = React.useState('clouds'); // clouds, precipitation, temp
   
   // Tile layer based on mode
   const getTileUrl = () => {
