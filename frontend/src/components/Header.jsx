@@ -110,11 +110,35 @@ export const Header = () => {
             <div className={`font-mono text-sm lg:text-base font-bold ${stat.color}`}>
               {isLoading ? <span className="shimmer inline-block w-8 h-4 rounded" /> : stat.value}
             </div>
-            <div className="font-mono text-[7px] lg:text-[8px] text-muted-foreground tracking-widest">
+            <div className="font-mono text-[7px] lg:text-[8px] text-muted-foreground tracking-widest flex items-center justify-center gap-1">
               {stat.label}
+              <span className={`text-[6px] px-1 rounded ${
+                stat.status === 'LIVE' ? 'bg-success/20 text-success' :
+                stat.status === 'ESTIMATED' ? 'bg-warning/20 text-warning' :
+                'bg-muted text-muted-foreground'
+              }`}>
+                {stat.status}
+              </span>
             </div>
           </motion.div>
         ))}
+        {/* Fire indicator */}
+        {fireCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
+          >
+            <div className="font-mono text-sm lg:text-base font-bold text-orange-500 flex items-center gap-1">
+              <Flame className="h-4 w-4 animate-pulse" />
+              {fireCount}
+            </div>
+            <div className="font-mono text-[7px] lg:text-[8px] text-muted-foreground tracking-widest flex items-center justify-center gap-1">
+              FIRES
+              <span className="text-[6px] px-1 rounded bg-orange-500/20 text-orange-400">LIVE</span>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Right side - Mode toggle & Live badge */}
