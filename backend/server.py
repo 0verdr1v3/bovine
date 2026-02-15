@@ -25,7 +25,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Create the main app
-app = FastAPI(title="BOVINE - Cattle Movement Intelligence")
+app = FastAPI(title="BOVINE - Cattle Movement Tracking System")
 
 # Create API router
 api_router = APIRouter(prefix="/api")
@@ -115,12 +115,13 @@ class DataUpdateScheduler:
                 self._update_flood_data(),
                 self._update_disaster_alerts(),
                 self._update_news_data(),
+                self._update_methane_data(),
                 return_exceptions=True
             )
             
             # Log results
             sources = ['weather', 'ndvi', 'soil_moisture', 'chirps_rainfall', 'nighttime_lights', 
-                      'conflict', 'fire', 'flood', 'disasters', 'news']
+                      'conflict', 'fire', 'flood', 'disasters', 'news', 'methane']
             self.update_results = {}
             for i, result in enumerate(results):
                 if isinstance(result, Exception):
@@ -629,7 +630,7 @@ class DataUpdateScheduler:
         try:
             async with httpx.AsyncClient(timeout=30.0) as http_client:
                 params = {
-                    "appname": "bovine-intelligence",
+                    "appname": "bovine-tracker",
                     "query[value]": "South Sudan cattle OR livestock OR pastoral OR conflict",
                     "filter[field]": "country.name",
                     "filter[value]": "South Sudan",
@@ -667,6 +668,103 @@ class DataUpdateScheduler:
                 
         except Exception as e:
             raise Exception(f"News update failed: {e}")
+    
+    async def _update_methane_data(self) -> str:
+        """Fetch methane emissions data from GEE Sentinel-5P TROPOMI"""
+        if not GEE_INITIALIZED:
+            # Use estimated data based on cattle population
+            regions = [
+                {"name": "Jonglei", "lat": 7.0, "lng": 32.0, "cattle_density": "high"},
+                {"name": "Unity", "lat": 9.0, "lng": 29.5, "cattle_density": "medium"},
+                {"name": "Lakes", "lat": 6.8, "lng": 29.5, "cattle_density": "high"},
+                {"name": "Warrap", "lat": 8.0, "lng": 28.5, "cattle_density": "very_high"},
+                {"name": "Upper Nile", "lat": 9.8, "lng": 32.0, "cattle_density": "medium"},
+                {"name": "Central Equatoria", "lat": 4.85, "lng": 31.6, "cattle_density": "medium"},
+            ]
+            
+            # Methane emission factors (kg CH4/head/year) based on IPCC guidelines
+            emission_factors = {"very_high": 48, "high": 44, "medium": 40, "low": 36}
+            
+            for region in regions:
+                factor = emission_factors.get(region["cattle_density"], 40)
+                # Estimate based on typical regional cattle numbers
+                estimated_cattle = {"very_high": 15000, "high": 10000, "medium": 6000, "low": 3000}
+                cattle_count = estimated_cattle.get(region["cattle_density"], 5000)
+                annual_ch4 = cattle_count * factor / 1000  # Convert to tonnes
+                daily_ch4 = annual_ch4 / 365
+                
+                await db.methane_cache.update_one(
+                    {"name": region["name"]},
+                    {"$set": {
+                        **region,
+                        "ch4_ppb": round(1850 + (daily_ch4 * 0.5), 1),  # Background + contribution
+                        "estimated_daily_tonnes": round(daily_ch4, 2),
+                        "estimated_annual_tonnes": round(annual_ch4, 1),
+                        "source": "IPCC Emission Factors (GEE unavailable)",
+                        "data_status": DataStatus.ESTIMATED,
+                        "methodology": "IPCC Tier 1 emission factors for enteric fermentation",
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }},
+                    upsert=True
+                )
+            return "Stored estimated methane data (GEE unavailable)"
+        
+        try:
+            regions = [
+                {"name": "Jonglei", "lat": 7.0, "lng": 32.0},
+                {"name": "Unity", "lat": 9.0, "lng": 29.5},
+                {"name": "Lakes", "lat": 6.8, "lng": 29.5},
+                {"name": "Warrap", "lat": 8.0, "lng": 28.5},
+                {"name": "Upper Nile", "lat": 9.8, "lng": 32.0},
+                {"name": "Central Equatoria", "lat": 4.85, "lng": 31.6},
+            ]
+            
+            end_date = datetime.now(timezone.utc)
+            start_date = end_date - timedelta(days=30)
+            
+            # Sentinel-5P TROPOMI CH4 data
+            try:
+                ch4_collection = ee.ImageCollection('COPERNICUS/S5P/OFFL/L3_CH4') \
+                    .filterDate(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')) \
+                    .select('CH4_column_volume_mixing_ratio_dry_air')
+                
+                updated = 0
+                for region in regions:
+                    try:
+                        point = ee.Geometry.Point([region["lng"], region["lat"]])
+                        buffer = point.buffer(50000)
+                        
+                        mean_ch4 = ch4_collection.mean().reduceRegion(
+                            reducer=ee.Reducer.mean(),
+                            geometry=buffer,
+                            scale=7000,
+                            maxPixels=1e9
+                        ).getInfo()
+                        
+                        ch4_value = mean_ch4.get('CH4_column_volume_mixing_ratio_dry_air', 0) or 0
+                        
+                        await db.methane_cache.update_one(
+                            {"name": region["name"]},
+                            {"$set": {
+                                **region,
+                                "ch4_ppb": round(ch4_value, 1),
+                                "source": "Sentinel-5P TROPOMI via GEE",
+                                "data_status": DataStatus.LIVE if ch4_value > 0 else DataStatus.ESTIMATED,
+                                "methodology": "Satellite column measurements",
+                                "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+                                "updated_at": datetime.now(timezone.utc).isoformat()
+                            }},
+                            upsert=True
+                        )
+                        updated += 1
+                    except Exception as e:
+                        logger.warning(f"Methane for {region['name']}: {e}")
+                
+                return f"Updated {updated} methane regions from GEE"
+            except Exception as e:
+                return f"Sentinel-5P data unavailable: {e}"
+        except Exception as e:
+            raise Exception(f"Methane update failed: {e}")
 
 # Initialize scheduler
 data_scheduler = DataUpdateScheduler()
@@ -716,6 +814,10 @@ async def get_cached_disasters() -> List[Dict]:
 async def get_cached_news() -> List[Dict]:
     cursor = db.news_cache.find({}, {"_id": 0})
     return await cursor.to_list(50)
+
+async def get_cached_methane() -> List[Dict]:
+    cursor = db.methane_cache.find({}, {"_id": 0})
+    return await cursor.to_list(100)
 
 async def get_last_update_info() -> Dict:
     meta = await db.system_meta.find_one({"_id": "last_batch_update"})
@@ -874,7 +976,7 @@ async def generate_evidence_based_herds():
             "note": "Fastest-moving herd. LOW NDVI driving rapid northward movement. HIGH CONFLICT RISK.",
             "data_status": DataStatus.ESTIMATED,
             "estimation_method": "UNMISS early warning + ACLED historical + GEE daily monitoring",
-            "data_sources": ["UNMISS Intelligence", "ACLED Conflict Data", "GEE Daily Composites", "NASA FIRMS"],
+            "data_sources": ["UNMISS Reports", "ACLED Conflict Data", "GEE Daily Composites", "NASA FIRMS"],
             "last_updated": last_updated_str,
             "evidence": {
                 "primary_indicators": [
@@ -884,7 +986,7 @@ async def generate_evidence_based_herds():
                 ],
                 "confidence": 0.88,
                 "confidence_factors": {
-                    "unmiss_intelligence": 0.90,
+                    "unmiss_reports": 0.90,
                     "acled_correlation": 0.85,
                     "satellite_velocity": 0.88
                 }
@@ -1099,7 +1201,7 @@ async def process_conflicts_to_zones() -> List[Dict]:
 async def root():
     last_update = await get_last_update_info()
     return {
-        "message": "BOVINE - Cattle Movement Intelligence API",
+        "message": "BOVINE - Cattle Movement Tracking API",
         "version": "2.0",
         "status": "operational",
         "gee_status": "CONNECTED" if GEE_INITIALIZED else "FALLBACK",
