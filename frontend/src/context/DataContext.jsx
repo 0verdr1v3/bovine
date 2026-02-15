@@ -161,6 +161,75 @@ export const DataProvider = ({ children }) => {
       setDisplacement(displacementRes.data);
       setDataSources(dataSourcesRes.data?.sources || []);
       setLastUpdated(new Date().toISOString());
+
+      // Alert detection (skip on first load)
+      if (!isFirstLoad.current) {
+        const newNews = newsRes.data?.articles || [];
+        const newConflicts = conflictRes.data?.zones || [];
+        const newFires = firesRes.data?.fires || [];
+        const newHerds = herdsRes.data?.herds || [];
+
+        // Check for new news articles
+        const prevNewsIds = new Set(prevDataRef.current.news.map(n => n.id || n.title));
+        const freshNews = newNews.filter(n => !prevNewsIds.has(n.id || n.title));
+        if (freshNews.length > 0) {
+          toast.info(`📰 ${freshNews.length} new news article${freshNews.length > 1 ? 's' : ''}`, {
+            description: freshNews[0]?.title?.substring(0, 60) + '...',
+            duration: 10000,
+          });
+        }
+
+        // Check for new/escalated conflicts
+        const prevConflictIds = new Set(prevDataRef.current.conflicts.map(c => c.id));
+        const freshConflicts = newConflicts.filter(c => !prevConflictIds.has(c.id));
+        const escalatedConflicts = newConflicts.filter(c => {
+          const prev = prevDataRef.current.conflicts.find(p => p.id === c.id);
+          return prev && c.risk_score > prev.risk_score + 5;
+        });
+        
+        if (freshConflicts.length > 0) {
+          toast.warning(`⚠️ ${freshConflicts.length} new conflict zone${freshConflicts.length > 1 ? 's' : ''} detected`, {
+            description: freshConflicts[0]?.name,
+            duration: 10000,
+          });
+        }
+        if (escalatedConflicts.length > 0) {
+          toast.error(`🚨 Risk escalation in ${escalatedConflicts[0]?.name}`, {
+            description: `Risk increased to ${escalatedConflicts[0]?.risk_score}%`,
+            duration: 10000,
+          });
+        }
+
+        // Check for new fires
+        const prevFireCount = prevDataRef.current.fires.length;
+        if (newFires.length > prevFireCount + 2) {
+          toast.error(`🔥 ${newFires.length - prevFireCount} new fire hotspots detected`, {
+            description: 'NASA FIRMS satellite alert',
+            duration: 10000,
+          });
+        }
+
+        // Check for significant herd movement (speed > 12 km/day)
+        const fastMovingHerds = newHerds.filter(h => h.speed >= 12);
+        const prevFastHerds = new Set(prevDataRef.current.herds.filter(h => h.speed >= 12).map(h => h.id));
+        const newFastMovers = fastMovingHerds.filter(h => !prevFastHerds.has(h.id));
+        
+        if (newFastMovers.length > 0) {
+          toast.warning(`🐄 Rapid herd movement: ${newFastMovers[0]?.name}`, {
+            description: `Moving ${newFastMovers[0]?.speed} km/day ${newFastMovers[0]?.trend}`,
+            duration: 10000,
+          });
+        }
+      }
+
+      // Update refs for next comparison
+      prevDataRef.current = {
+        news: newsRes.data?.articles || [],
+        conflicts: conflictRes.data?.zones || [],
+        fires: firesRes.data?.fires || [],
+        herds: herdsRes.data?.herds || [],
+      };
+      isFirstLoad.current = false;
     } catch (err) {
       console.error('Failed to fetch data:', err);
       setError('Failed to load data. Please try again.');
