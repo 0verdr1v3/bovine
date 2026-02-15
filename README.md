@@ -288,7 +288,7 @@ GEE_CLIENT_EMAIL="your-sa@project.iam.gserviceaccount.com"
 
 ## 📄 License
 
-This project is built for humanitarian purposes. Contact [Emergent Labs](https://emergentagent.com) for licensing information.
+This project is built for humanitarian purposes. 
 
 ---
 
