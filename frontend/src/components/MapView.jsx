@@ -542,7 +542,7 @@ export const MapView = () => {
         {/* Weather precipitation overlay - OpenWeatherMap */}
         {showWeatherOverlay && (
           <TileLayer
-            url="https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=9de243494c0b295cca9337e1e96b00e2"
+            url={`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${process.env.REACT_APP_OPENWEATHER_API_KEY || '9de243494c0b295cca9337e1e96b00e2'}`}
             opacity={0.5}
             maxZoom={18}
           />
@@ -551,7 +551,7 @@ export const MapView = () => {
         {/* Cloud cover overlay - OpenWeatherMap */}
         {showRadarOverlay && (
           <TileLayer
-            url="https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=9de243494c0b295cca9337e1e96b00e2"
+            url={`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${process.env.REACT_APP_OPENWEATHER_API_KEY || '9de243494c0b295cca9337e1e96b00e2'}`}
             opacity={0.6}
             maxZoom={18}
           />
