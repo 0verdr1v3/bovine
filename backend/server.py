@@ -1438,6 +1438,31 @@ async def get_disasters():
         "data_status": DataStatus.LIVE if disasters else DataStatus.ESTIMATED
     }
 
+@api_router.get("/methane")
+async def get_methane():
+    """Get methane emissions data"""
+    methane_data = await get_cached_methane()
+    
+    # Calculate summary statistics
+    total_daily = sum(r.get("estimated_daily_tonnes", 0) for r in methane_data if r.get("estimated_daily_tonnes"))
+    avg_ppb = sum(r.get("ch4_ppb", 0) for r in methane_data) / len(methane_data) if methane_data else 0
+    
+    return {
+        "regions": methane_data,
+        "count": len(methane_data),
+        "summary": {
+            "avg_ch4_ppb": round(avg_ppb, 1),
+            "estimated_daily_tonnes": round(total_daily, 2),
+            "estimated_annual_tonnes": round(total_daily * 365, 1),
+            "global_background_ppb": 1900,
+            "note": "Methane from enteric fermentation (cattle digestion)"
+        },
+        "source": "Sentinel-5P TROPOMI via GEE" if GEE_INITIALIZED else "IPCC Emission Factors",
+        "data_status": DataStatus.LIVE if GEE_INITIALIZED else DataStatus.ESTIMATED,
+        "methodology": "Satellite column measurements + IPCC Tier 1 emission factors",
+        "unit": "parts per billion (ppb) / tonnes CH4"
+    }
+
 @api_router.get("/food-security")
 async def get_food_security():
     """Get food security data"""
