@@ -221,7 +221,7 @@ const HerdDetailTab = () => {
 
   return (
     <ScrollArea className="h-full">
-      <div className="p-3 space-y-3">
+      <div className="p-3 pb-6 space-y-3">
         {/* Header Card */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -412,7 +412,7 @@ const ConflictDetailTab = () => {
 
   return (
     <ScrollArea className="h-full">
-      <div className="p-3 space-y-3">
+      <div className="p-3 pb-6 space-y-3">
         {/* Header Card */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
