@@ -215,6 +215,12 @@ February 15, 2026
 - Removed "intelligence" buzzwords from branding (now "Cattle Movement Tracking")
 - Implemented auto-tab-switch feature: clicking a herd in list opens HERD tab in right panel
 - Added ENV tab with methane emissions data display
+- **NEW: Alert/notification system** - Toast notifications (10s) for:
+  - New news articles
+  - New conflict zones detected
+  - Risk escalations in existing zones
+  - New fire hotspots (NASA FIRMS)
+  - Rapid herd movements (>12 km/day)
 - Total data sources: 14 (10 LIVE, 4 REFERENCE)
 - UI cleanup and deployment preparation completed
 
