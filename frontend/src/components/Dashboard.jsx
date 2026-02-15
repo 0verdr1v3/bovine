@@ -49,7 +49,7 @@ const LoadingSkeleton = () => (
         BOVINE
       </div>
       <div className="font-mono text-[10px] text-muted-foreground tracking-wider mb-6">
-        LOADING INTELLIGENCE DATA...
+        LOADING DATA...
       </div>
       <div className="flex justify-center gap-1">
         {[0, 1, 2].map((i) => (

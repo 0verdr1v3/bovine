@@ -92,7 +92,7 @@ export const Header = () => {
             BOVINE
           </h1>
           <p className="font-mono text-[8px] lg:text-[9px] text-muted-foreground tracking-[3px] -mt-0.5">
-            CATTLE MOVEMENT INTELLIGENCE · SOUTH SUDAN
+            CATTLE MOVEMENT TRACKING · SOUTH SUDAN
           </p>
         </div>
       </div>
