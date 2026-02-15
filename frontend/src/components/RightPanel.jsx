@@ -575,7 +575,7 @@ const FoodSecurityTab = () => {
 
   return (
     <ScrollArea className="h-full">
-      <div className="p-3 space-y-4">
+      <div className="p-3 pb-6 space-y-4">
         <h3 className="font-display text-base font-bold tracking-wide flex items-center gap-2">
           <Wheat className="h-4 w-4 text-warning" />
           Environment & Humanitarian
@@ -731,7 +731,7 @@ const DataSourcesTab = () => {
 
   return (
     <ScrollArea className="h-full">
-      <div className="p-3 space-y-4">
+      <div className="p-3 pb-6 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-display text-base font-bold tracking-wide flex items-center gap-2">
             <Globe className="h-4 w-4" />
