@@ -1163,7 +1163,7 @@ async def process_conflicts_to_zones() -> List[Dict]:
                     if grid_key not in location_groups:
                         location_groups[grid_key] = []
                     location_groups[grid_key].append(event)
-            except:
+            except (ValueError, TypeError, KeyError):
                 continue
         
         live_zones = []
@@ -1237,7 +1237,6 @@ async def get_herds():
 async def get_weather():
     """Get weather data with status"""
     weather_data = await get_cached_weather()
-    last_update = await get_last_update_info()
     
     if weather_data:
         primary = weather_data[0]
@@ -1658,7 +1657,6 @@ async def ai_analyze(request: AIAnalysisRequest):
     try:
         herds = await generate_evidence_based_herds()
         ndvi_data = await get_cached_ndvi()
-        chirps_data = await get_cached_chirps()
         conflict_zones = await process_conflicts_to_zones()
         fires = await get_cached_fires()
         
