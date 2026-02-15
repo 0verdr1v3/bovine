@@ -851,7 +851,7 @@ export const RightPanel = () => {
             value="food"
             className="font-mono text-[8px] tracking-widest data-[state=active]:text-warning data-[state=active]:border-b-2 data-[state=active]:border-warning rounded-none"
           >
-            FOOD
+            ENV
           </TabsTrigger>
           <TabsTrigger 
             value="data"
