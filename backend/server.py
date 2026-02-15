@@ -1669,7 +1669,7 @@ async def ai_analyze(request: AIAnalysisRequest):
             for z in conflict_zones[:5]
         ])
 
-        system_prompt = f"""You are BOVINE, a cattle movement intelligence system for South Sudan used by the United Nations.
+        system_prompt = f"""You are BOVINE, a cattle movement tracking and analysis system for South Sudan used by the United Nations.
 
 DATA STATUS LEGEND:
 - LIVE = Real-time data from APIs/satellites (updated every 10 min)
