@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -37,6 +38,10 @@ export const DataProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [dataMethodology, setDataMethodology] = useState('');
+
+  // Alert tracking refs (to detect changes)
+  const prevDataRef = useRef({ news: [], conflicts: [], fires: [], herds: [] });
+  const isFirstLoad = useRef(true);
 
   // Layer visibility state
   const [layers, setLayers] = useState({
