@@ -306,7 +306,7 @@ export const LeftPanel = () => {
         </TabsList>
 
         <ScrollArea className="flex-1">
-          <TabsContent value="herds" className="m-0 p-3 space-y-4">
+          <TabsContent value="herds" className="m-0 p-3 pb-6 space-y-4">
             {/* Tracked Herds */}
             <section>
               <div className="tactical-label mb-2 flex items-center gap-2">
@@ -361,7 +361,7 @@ export const LeftPanel = () => {
             </section>
           </TabsContent>
 
-          <TabsContent value="conflicts" className="m-0 p-3 space-y-4">
+          <TabsContent value="conflicts" className="m-0 p-3 pb-6 space-y-4">
             {/* Conflict Zones */}
             <section>
               <div className="tactical-label mb-2 flex items-center gap-2">
@@ -408,7 +408,7 @@ export const LeftPanel = () => {
             </section>
           </TabsContent>
 
-          <TabsContent value="news" className="m-0 p-3 space-y-4">
+          <TabsContent value="news" className="m-0 p-3 pb-6 space-y-4">
             {/* News Feed */}
             <section>
               <div className="tactical-label mb-2 flex items-center gap-2">
