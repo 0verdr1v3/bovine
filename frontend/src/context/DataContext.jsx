@@ -27,6 +27,7 @@ export const DataProvider = ({ children }) => {
   const [news, setNews] = useState([]);
   const [stats, setStats] = useState(null);
   const [fires, setFires] = useState([]);
+  const [methane, setMethane] = useState(null);
   const [foodSecurity, setFoodSecurity] = useState(null);
   const [displacement, setDisplacement] = useState(null);
   const [dataSources, setDataSources] = useState([]);
@@ -114,6 +115,7 @@ export const DataProvider = ({ children }) => {
         newsRes,
         statsRes,
         firesRes,
+        methaneRes,
         foodSecurityRes,
         displacementRes,
         dataSourcesRes,
@@ -130,6 +132,7 @@ export const DataProvider = ({ children }) => {
         axios.get(`${API}/news`).catch(e => ({ data: { articles: [] } })),
         axios.get(`${API}/stats`).catch(e => ({ data: null })),
         axios.get(`${API}/fires`).catch(e => ({ data: { fires: [] } })),
+        axios.get(`${API}/methane`).catch(e => ({ data: null })),
         axios.get(`${API}/food-security`).catch(e => ({ data: null })),
         axios.get(`${API}/displacement`).catch(e => ({ data: null })),
         axios.get(`${API}/data-sources`).catch(e => ({ data: { sources: [] } })),
@@ -148,6 +151,7 @@ export const DataProvider = ({ children }) => {
       setNews(newsRes.data?.articles || []);
       setStats(statsRes.data);
       setFires(firesRes.data?.fires || []);
+      setMethane(methaneRes.data);
       setFoodSecurity(foodSecurityRes.data);
       setDisplacement(displacementRes.data);
       setDataSources(dataSourcesRes.data?.sources || []);
@@ -210,6 +214,7 @@ export const DataProvider = ({ children }) => {
     news,
     stats,
     fires,
+    methane,
     foodSecurity,
     displacement,
     dataSources,
