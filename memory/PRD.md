@@ -1,4 +1,4 @@
-# BOVINE - Cattle Movement Intelligence System
+# BOVINE - Cattle Movement Tracking System
 ## Product Requirements Document
 
 ### Overview
@@ -28,6 +28,7 @@ A Bloomberg-style terminal for tracking and predicting cattle movement in South 
 | Food Security | FEWS NET | LIVE | Reference |
 | Displacement | UNHCR/IOM | LIVE | Reference |
 | Livestock Census | FAO | HISTORICAL | Baseline |
+| Methane Emissions | Sentinel-5P TROPOMI via GEE | LIVE | 10 min batch |
 
 ### ⚠️ ESTIMATED Data (Derived from Real Sources)
 
@@ -62,10 +63,10 @@ Benefits:
 
 ---
 
-## Integrated Data Sources (13 Total)
+## Integrated Data Sources (14 Total)
 
-### LIVE (9 sources)
-1. Google Earth Engine (MODIS NDVI, NASA SMAP, CHIRPS, VIIRS, JRC, Sentinel-1)
+### LIVE (10 sources)
+1. Google Earth Engine (MODIS NDVI, NASA SMAP, CHIRPS, VIIRS, JRC, Sentinel-1, Sentinel-5P)
 2. Open-Meteo Weather
 3. ACLED Conflict Data
 4. NASA FIRMS Fire Detection
@@ -74,6 +75,7 @@ Benefits:
 7. GDACS Disasters
 8. FEWS NET Food Security
 9. UNHCR/IOM Displacement
+10. Sentinel-5P TROPOMI Methane
 
 ### REFERENCE (4 sources)
 10. FAO Livestock Data
@@ -142,6 +144,7 @@ Benefits:
 - `GET /api/disasters` - GDACS alerts
 - `GET /api/food-security` - FEWS NET
 - `GET /api/displacement` - UNHCR/IOM
+- `GET /api/methane` - Sentinel-5P TROPOMI CH4 emissions
 - `GET /api/news` - ReliefWeb
 - `GET /api/stats` - Dashboard stats
 - `GET /api/data-sources` - 13 sources status
@@ -205,9 +208,17 @@ GEE_CLIENT_EMAIL="bovine@lucid-course-415903.iam.gserviceaccount.com"
 ---
 
 ## Last Updated
-February 12, 2026
+February 15, 2026
 
-## Session Summary
+## Session Summary (February 15, 2026)
+- Added methane (CH4) emissions tracking via Sentinel-5P TROPOMI satellite
+- Removed "intelligence" buzzwords from branding (now "Cattle Movement Tracking")
+- Implemented auto-tab-switch feature: clicking a herd in list opens HERD tab in right panel
+- Added ENV tab with methane emissions data display
+- Total data sources: 14 (10 LIVE, 4 REFERENCE)
+- UI cleanup and deployment preparation completed
+
+## Previous Session Summary (February 12, 2026)
 - Integrated 13 real data sources (9 LIVE, 4 REFERENCE)
 - Google Earth Engine connected with 6 datasets
 - All herd data now evidence-based with confidence scores
