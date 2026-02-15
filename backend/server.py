@@ -1733,7 +1733,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("BOVINE Cattle Movement Intelligence API v2.0 starting...")
+    logger.info("BOVINE Cattle Movement Tracking System v2.0 starting...")
     initialize_earth_engine()
     logger.info("Running initial batch data update...")
     asyncio.create_task(data_scheduler.run_batch_update())
