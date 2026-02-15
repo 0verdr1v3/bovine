@@ -560,7 +560,7 @@ const ConflictDetailTab = () => {
 
 // Food Security Tab - NEW
 const FoodSecurityTab = () => {
-  const { foodSecurity, displacement, grazingRegions } = useData();
+  const { foodSecurity, displacement, grazingRegions, methane } = useData();
 
   const getPhaseColor = (phase) => {
     const colors = {
@@ -578,8 +578,46 @@ const FoodSecurityTab = () => {
       <div className="p-3 space-y-4">
         <h3 className="font-display text-base font-bold tracking-wide flex items-center gap-2">
           <Wheat className="h-4 w-4 text-warning" />
-          Food Security & Humanitarian
+          Environment & Humanitarian
         </h3>
+        
+        {/* Methane Emissions - NEW */}
+        {methane && (
+          <div className="bg-muted border border-border p-3">
+            <div className="tactical-label mb-2 flex items-center gap-2">
+              <Activity className="h-3 w-3 text-orange-400" />
+              METHANE EMISSIONS (CH₄)
+              <Badge variant="outline" className="text-[7px] bg-orange-500/10 text-orange-400 border-orange-500/30">
+                {methane.data_status}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-2">
+              <div>
+                <div className="text-lg font-bold text-orange-400">
+                  {methane.summary?.avg_ch4_ppb || '—'} <span className="text-[9px] text-muted-foreground">ppb</span>
+                </div>
+                <div className="text-[9px] text-muted-foreground">Avg. Concentration</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-orange-400">
+                  {methane.summary?.estimated_annual_tonnes || '—'} <span className="text-[9px] text-muted-foreground">t/yr</span>
+                </div>
+                <div className="text-[9px] text-muted-foreground">Est. Annual Emissions</div>
+              </div>
+            </div>
+            <div className="space-y-1">
+              {methane.regions?.slice(0, 4).map((region, i) => (
+                <div key={i} className="flex justify-between text-[10px] py-1 border-b border-border/30 last:border-0">
+                  <span>{region.name}</span>
+                  <span className="text-orange-400">{region.ch4_ppb?.toFixed(0)} ppb</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 pt-2 border-t border-border text-[9px] text-muted-foreground">
+              Source: {methane.source} · Global background: ~1900 ppb
+            </div>
+          </div>
+        )}
         
         {/* IPC Phase Overview */}
         {foodSecurity?.data?.current_phase && (
